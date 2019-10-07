@@ -1,0 +1,7 @@
+[slf6]
+name=SLF Fermi only packages
+baseurl=http://linux1.fnal.gov/linux/fermi/slf6x/$basearch/os/FermiPackages/
+gpgkey=http://ftp.scientificlinux.org/linux/fermi/slf6x/x86_64/os/RPM-GPG-KEY-sl http://ftp.scientificlinux.org/linux/fermi/slf6x/x86_64/os/RPM-GPG-KEY-sl6
+gpgcheck=1
+enabled=1
+
