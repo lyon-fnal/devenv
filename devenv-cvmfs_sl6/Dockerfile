@@ -1,4 +1,4 @@
-# docker build -t devenv_cvmfs:sl6 .
+# docker build -t lyonfnal/devenv_cvmfs:sl6 .
 # To run, you need environment variable CVMFS_EXP to be set (e.g. gm2, nova, uboone)
 
 FROM lyonfnal/devenv:sl6

@@ -97,5 +97,67 @@ Finally, restart docker. Click on the whale symbol in the menu bar and select `R
 
 You can learn more about this configuration at this [blog post](https://medium.com/@sean.handley/how-to-set-up-docker-for-mac-with-native-nfs-145151458adc). 
 
-### Building the docker images
+## The docker images
+
+There are three docker images you may pull or build.
+
+* `devenv:sl6` Scientific Linux 6 base image (970 MB). Includes SL6 with packages needed for development.
+* `devenv_cvmfs:sl6` Above as base with CVMFS (400 MB more than base). Allows one to mount CVMFS. Three cvmfs directories are mounted, 
+  * `/cvmfs/config-osg.opensciencegrid.org`
+  * `/cvmfs/fermilab.opensciencegrid.org`
+  * `/cvmfs/"${CVMFS_EXP}".opensciencegrid.org` where `$CVMFS_EXP` is an environment variable with the experiment repository name like `nova` or `gm2`
+  * If you need more repositories mounted, then make a pull request. 
+* `devenv_cvmfs_vnc:sl6` Above as base with VNC and desktop packages (500 MB more than base). Allows one to run VNC and have a desktop linux experience. 
+
+### Pulling the images
+
+You can pull the images directly from [Docker Hub](http://hub.docker.com). The first image, `devenv:sl6`, is somewhat useless on its own as most of our physics code relies on CVMFS. It is best to pull one or both of the other images. 
+
+If you never plan to use VNC, then,
+```bash
+docker pull lyonfnal/devenv_cvmfs:sl6
+```
+
+If you plan to use VNC all the time, then
+```bash
+docker pull lyonfnal/devenv_cvmfs_vnc:sl6
+```
+
+Otherwise, just do both. It only takes about 2 GB on your disk.
+```bash
+docker pull lyonfnal/devenv_cvmfs_vnc:sl6 
+docker pull lyonfnal/devenv_cvmfs:sl6  # This won't actually download anything 
+```
+The second pull won't download anything because `devenv_cvmfs:sl6` is the base image for `devenv_cvmfs_vnc:sl6`.
+
+You need `devenv_cvmfs:sl6` if you use CLion on the Mac (see below). 
+
+### Building the images
+
+You may build the images yourself instead of pulling from Docker hub. This will take a significant amount of time and requires a fast internet connection.  You should only do this if you want to make a change to a image. Better is to make a pull request and I can make your change in the repository. But if you really want to do the build yourself, you can do the following. Note that you may want to use a different identifier than `lyonfnal`. If you do that, you'll need to change the `FROM` declarations in each `Dockerfile`. 
+
+If you want to build the images as they are, then do the following
+
+```bash
+# Only if really necessary (prefer pull instead)
+cd Somewhere
+git clone https://github.com/lyon-fnal/devenv.git
+cd devenv
+cd devenv_sl6 ; docker build -t lyonfnal/devenv:sl6 . ; cd ..
+cd devenv-cvmfs_sl6 ; docker build -t lyonfnal/devenv_cvmfs:sl6 . ; cd ..
+cd devenv-cvmfs-vnc_sl6 ; docker build -t lyonfnal/devenv_cvmfs_vnc:sl6 . ; cd ..
+```
+
+## Running the containers with `docker-compose`
+
+To run the containers with `docker run` would require many, many options to the command to set up the container correctly. It is much easier to run the container from [docker-compose](https://docs.docker.com/compose), which stores the configuration in a file. You may also run the container as a service (this is important for running VNC and using CLion). 
+
+### Setting up `docker-compose`
+
+You are likely wanting to run the container for a development purpose. Make a directory on your Mac for a development area. For example, I may choose `/Users/lyon/Development/gm2/laserCalib`. In that directory, make a `docker` sub-directory.
+
+
+
+
+ 
 
