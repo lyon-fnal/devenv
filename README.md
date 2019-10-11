@@ -3,11 +3,11 @@ Adam L. Lyon, October 2019
 
 ## Introduction
 Linux style development, like what we do for particle physics experiments at Fermilab, is becoming more difficult on the Mac. Apple is moving to its own style of development that is often incompatible. For example,
-* System Integrity Protection (SIP) prevents using `DYLD_LIBRARY_PATH`, breaking the mechanism the development environment system, `ups`.
+* System Integrity Protection (SIP) prevents using `DYLD_LIBRARY_PATH`, breaking the mechanism used by our development environment system, `ups`.
 * Mac headers and system libraries are not always compatible with those on Linux, necessitating platform dependent code.
 * XCode is more focused on Swift, Objective-C, and Mac or iOS-style development. XCode does not understand CMake builds natively. 
 
-The differences that the Mac and XCode introduce are difficult to manage and many experiments have stopped making Mac builds. Despite these problems, Mac laptops remain powerful machines and the MacOS environment is advantageous in many other areas. Therefore, mitigating the problems with Linux style development is motivated.
+The differences that Mac and XCode introduce are difficult to manage and many experiments have stopped making Mac builds. Despite these problems, Mac laptops remain powerful machines and the MacOS environment is advantageous in many other areas. Therefore, mitigating the problems with Linux style development is motivated.
 
 This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using CLion for C++ development in this environment are also given.  
 
@@ -15,14 +15,14 @@ Note that the containers and techniques here may also work on Windows. You will 
 
 ## Details
 
-* For best performance, `/cvmfs` is mounted and managed from within the container.
-* You will keep your development and code directories and files on your Mac file system. The container will need performant to that filesystem. We will use `nfs` to do that. An advantage here is that you may be able to use nice Mac-based IDEs for development.  
+* For best performance, `/cvmfs` is mounted and managed from within the container (mounting the Mac's CVMFS within the container performs very poorly).
+* You will keep your development and code directories and files on your Mac file system. The container will need performant access to that filesystem. We will use `nfs` to do that. An advantage here is that you may be able to use nice Mac-based IDEs for development.  
 * You may use one of several different "styles" of use for the container
   * Run the container as a full service that hosts VNC and access like a Linux desktop. The container needs to be up and running during use. 
   * Run the container as a build/execution service for an IDE like CLion. In this case, the container needs to be up and running during use.
   * Run the container from the command line. In this case you can `docker run` various commands within the container. But see below. 
   
-One difficulty is that most of our physics code requires a setup step before running or building, which may be time consuming.  
+One difficulty is that most of our physics code requires a setup step before running or building, which may be time consuming. We will try a mitigation for CLion. 
 
 ## Why Docker containers?
 
@@ -32,12 +32,12 @@ There are three ways to do Linux style development on the Mac
 1. Run a Linux virtual machine with [Virtual Box](https://www.virtualbox.org) and [vagrant](https://www.vagrantup.com). A Virtual Box Linux VM is a heavyweight virtualization solution that is complicated to set up and maintain. `vagrant` makes configuration and management easier though not simple. Virtual Box VMs are also difficult to distribute. One advantage here is that Mac IDEs that support remote development do so with `ssh`, which is the preferred way to interact with a VM. 
 1. Run a Linux Docker Container. [Docker](https://www.docker.com) containers are lightweight virtualization solutions, relatively easy to set up and configure and are portable to other systems that run Docker or [Singularity](https://sylabs.io). A disadvantage is that running `ssh` in the container is not the "docker way", therefore integration with remote development capable IDEs is more difficult, but not impossible. 
 
-Another aspect it performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
+Another aspect is performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
 
 
 ## Installation
 
-These instructions will guide you into installing the containers and associated files.
+These instructions will guide you through installing the containers and associated files.
 
 ### Install and prepare Docker for Mac
 
@@ -53,7 +53,7 @@ Next, click on the `Advanced` tab. I allow Docker to access half of my Mac lapto
 
 ![Advanced preferences](documentation/advanced.png)
 
-You can tailor these preferences to your liking. Leave the subnet ast the default. If you make changes, you must click "Apply & Restart".
+You can tailor these preferences to your liking. Leave the subnet as the default. If you make changes, you must click "Apply & Restart".
 
 Next, click on `Daemon`. By default, docker will allow containers serving network ports to accept incoming connections from outside of your laptop. In general, this is a security problem and could lead to your Mac being blocked on the Fermilab network if the lab security scanner detects an accessible open port into, say, a web service hosted by a container. You can restrict docker to only accept connection from your Mac itself by changing the configuration as shown (in particular, the `ip` setting). 
 
@@ -65,7 +65,7 @@ If you've made any changes, click on "Apply & Restart".
 
 ### Prepare NFS
 
-For the best performance, your `/User` directory will be served into the docker container with `nfs`. I have found this technique to be the most performant way to access data on the Mac from the container. It is a little complicated to set up, so we'll do it only for the directory that matters - that is where all your code files exist in `/Users`. To do this, you need to follow these steps from a Mac terminal:
+For the best performance, your `/Users` directory will be served into the docker container with `nfs`. I have found this technique to be the most performant way to access data on the Mac from the container. It is a little complicated to set up, so we'll do it only for the directory that matters - that is where all your code files exist in `/Users`. To do this, you need to follow these steps from a Mac terminal:
 
 First - determine your user and group id numbers. Record them somewhere. 
 ```bash
@@ -79,7 +79,7 @@ Now, edit the `/etc/exports` file with `sudo emacs -nw /etc/exports` from the Ma
 /Users -alldirs -mapall=502:20 -no_subtree_check -async localhost
 ```
  
- Be sure to replace the `502` with your user ID and the `20` with your group id. Note that the `localhost` means your files will not be exported outside of your laptop, so this is safe. Save with `Ctrl-x Ctrl-c`. 
+ Be sure to replace the `502` with your user ID and the `20` with your group ID. Note that the `localhost` means your files will not be exported outside of your laptop, so this is safe. Save with `Ctrl-x Ctrl-c`. 
  
  Now, edit `/etc/nfs.conf` with `sudo emacs -nw /etc/nfs.conf`. Add the following line,
  ```
@@ -87,6 +87,15 @@ nfs.server.mount.require_resv_port = 0
 ```
 
 and save with `Ctrl-x Ctrl-c`.
+
+This option means (from the man page):
+
+> nfs.server.mount.require_resv_port: 
+                This option controls whether MOUNT requests are required to
+                originate from a reserved port (port < 1024).  The default value
+                is 1 (yes).  Many NFS server implementations require this
+                because of the false belief that this requirement increases
+                security.
 
 Now, restart nfs with 
 ```bash
@@ -106,7 +115,7 @@ There are three docker images you may pull or build.
   * `/cvmfs/config-osg.opensciencegrid.org`
   * `/cvmfs/fermilab.opensciencegrid.org`
   * `/cvmfs/"${CVMFS_EXP}".opensciencegrid.org` where `$CVMFS_EXP` is an environment variable with the experiment repository name like `nova` or `gm2`
-  * If you need more repositories mounted, then make a pull request. 
+  * If you need more repositories mounted, then make a pull request or open an issue. 
 * `devenv_cvmfs_vnc:sl6` Above as base with VNC and desktop packages (500 MB more than base). Allows one to run VNC and have a desktop linux experience. 
 
 ### Pulling the images
@@ -201,7 +210,7 @@ docker-compose run --rm --entrypoint /bin/bash <NAME>
 #   where <NAME> is the service name you chose when making the docker-compose.yml file
 
 # Now inside the container...
-/usr/local/bin/start_cvmfs.sh  # if you want CVMFS mounteed
+/usr/local/bin/start_cvmfs.sh  # if you want CVMFS mounted
 # ... do stuff ...
 exit  
 # Container exits and is removed (external volumes stay)
@@ -211,7 +220,7 @@ exit
  
  ### Run as a service with `docker-compose up -d` [do this]
  
- The typical way to run the container is as a service, either with or without VNC (you made that choice when you created `docker-compose.yml` from the template). To start, do
+ The typical way to run the container is as a service (this is advantageous as it takes time to mount `/cvmfs`), either with or without VNC (you made that choice when you created `docker-compose.yml` from the template). To start, do
  
  ```bash
 cd /path/to/docker-compose-directory
@@ -227,9 +236,11 @@ cd /path/to/docker-compose-directory
 docker-compose down
 ```
 
+Note that the data in the external volumes are retained. 
+
 ### Connecting to the container with VNC
 
-You may run a full Linux desktop with VNC. You must specify the `lyonfnal/devenv_cvmvs_vnc:sl6` image in the `docker-compose.yml` file. Your Mac comes with a VNC-viewer called `Screen Sharing`. Bring up `Screen Sharing` (you can use "Spotlight Search" by Command-Space and search for it or from the Finder in `Macintosh HD -> System -> Library -> CoreServices -> Applications -> Screen Sharing`). In the "Connect To" box type `localhost:5901` (you'll note that the 5901 port is specified in the `docker-compose.yml` file). The VNC password is `devenv`. You may see a warning about running as the Superuser. You can ignore it. I like to maximize the Screen Sharing window (green expand button on the  upper left). On the top menu bar, the right most icon that looks like a terminal will open a terminal window.  
+You may run a full Linux desktop with VNC. You must specify the `lyonfnal/devenv_cvmvs_vnc:sl6` image in the `docker-compose.yml` file and start the container as a service as per above. Your Mac comes with a VNC-viewer called `Screen Sharing`. Bring up `Screen Sharing` (you can use "Spotlight Search" by Command-Space and search for it or from the Finder in `Macintosh HD -> System -> Library -> CoreServices -> Applications -> Screen Sharing`). In the "Connect To" box type `localhost:5901` (you'll note that the 5901 port is specified in the `docker-compose.yml` file). The VNC password is `devenv`. You may see a warning about running as the Superuser. You can ignore it. I like to maximize the Screen Sharing window (green expand button on the  upper left). On the top menu bar, the right most icon that looks like a terminal will open a terminal window.  
  
  You can change the desktop screen size with `System -> Preferences -> Display`. I use 2880x1800 when connected to a big screen and 1920x1200 when on my laptop proper. 
  
@@ -246,7 +257,7 @@ You may run a full Linux desktop with VNC. You must specify the `lyonfnal/devenv
  ```bash
 docker-compose exec <NAME> /bin/bash
 ```
-where `<NAME>` is the name of the service you chose when you made the `docker-compose.yml` file. You will then have a fresh shell at the root prompt. CVMFS will be mounted. 
+where `<NAME>` is the name of the service you chose when you made the `docker-compose.yml` file. You will then have a fresh shell at the root prompt. CVMFS will be mounted already. 
 
 You may exit this shell back to your Mac. The service will continue to run. You may `docker-compose exec` in again.
 
