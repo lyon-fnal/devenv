@@ -1,4 +1,4 @@
-# devenv - A developmemt environment for the Mac
+# devenv - A development environment for the Mac
 Adam L. Lyon, October 2019
 
 ## Introduction
