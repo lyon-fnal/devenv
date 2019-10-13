@@ -7,7 +7,7 @@
 # o Replace <USER> with your Mac username [appears twice in file]
 
 # An easy way to do this is with the following command
-# sed -e 's/<NAME>/AA/' -e 's/<IMAGE>/BB/' -e 's/<EXP>/CC/' -e 's/<USER>/DD' \
+# sed -e 's#<NAME>#AA#' -e 's#<IMAGE>#BB#' -e 's#<EXP>#CC#' -e 's#<USER>#DD#' \
 #        docker-compose.yml-template > /path/to/dev/area/docker/docker-compose.yml
 #  Where you've replaced AA, BB, CC and DD accordingly.
 #
