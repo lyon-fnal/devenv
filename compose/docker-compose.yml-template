@@ -13,7 +13,7 @@
 #
 # The cvmfs_cache and home_dev containers are marked as external so they can be shared among
 #      "services". If you haven't already, you should create them with
-#      docker volume create home_dev 
+#      docker volume create slash_root
 #      docker volume create cvmfs_cache
 #    Note that you may not be able to run more than one "service" on the same CVMFS cache simultaneously
 
