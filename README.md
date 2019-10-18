@@ -9,7 +9,7 @@ Linux style development, like what we do for particle physics experiments at Fer
 
 The differences that Mac and XCode introduce are difficult to manage and many experiments have stopped making Mac builds. Despite these problems, Mac laptops remain powerful machines and the MacOS environment is advantageous in many other areas. Therefore, mitigating the problems with Linux style development is motivated.
 
-This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using CLion for C++ development in this environment are also given.  
+This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using CLion for C++ development in this environment are given in the [CLion documentation here](clion.md).  
 
 Note that the containers and techniques here may also work on Windows. You will have to adapt these instructions for that platform. 
 
@@ -20,7 +20,7 @@ Note that the containers and techniques here may also work on Windows. You will 
 * You may use one of several different "styles" of use for the container
   * Run the container as a full service that hosts VNC and access like a Linux desktop. The container needs to be up and running during use. 
   * Run the container as a build/execution service for an IDE like CLion. In this case, the container needs to be up and running during use.
-  * Run the container from the command line. In this case you can `docker run` various commands within the container. But see below. 
+  * Run the container from the command line. In this case you can `docker run` various commands within the container.
   
 One difficulty is that most of our physics code requires a setup step before running or building, which may be time consuming. We will try a mitigation for CLion. 
 
@@ -33,7 +33,6 @@ There are three ways to do Linux style development on the Mac
 1. Run a Linux Docker Container. [Docker](https://www.docker.com) containers are lightweight virtualization solutions, relatively easy to set up and configure and are portable to other systems that run Docker or [Singularity](https://sylabs.io). A disadvantage is that running `ssh` in the container is not the "docker way", therefore integration with remote development capable IDEs is more difficult, but not impossible. 
 
 Another aspect is performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
-
 
 ## Installation
 
@@ -108,7 +107,7 @@ You can learn more about this configuration at this [blog post](https://medium.c
 
 ## The docker images
 
-There are three docker images you may pull or build.
+There are five docker images you may pull or build (note that all of the images have `lyonfnal/` in front). 
 
 * `devenv:sl6` Scientific Linux 6 base image (970 MB). Includes SL6 with packages needed for development.
 * `devenv_cvmfs:sl6` Above as base with CVMFS (400 MB more than base). Allows one to mount CVMFS. Three cvmfs directories are mounted, 
@@ -117,45 +116,21 @@ There are three docker images you may pull or build.
   * `/cvmfs/"${CVMFS_EXP}".opensciencegrid.org` where `$CVMFS_EXP` is an environment variable with the experiment repository name like `nova` or `gm2`
   * If you need more repositories mounted, then make a pull request or open an issue. 
 * `devenv_cvmfs_vnc:sl6` Above as base with VNC and desktop packages (500 MB more than base). Allows one to run VNC and have a desktop linux experience. 
+* `devenv_cvmfs_nfsserver:sl6` A special image where the container can serve CVMFS directories to other containers via nfs. 
+* `devenv_cvmfs_nfsclient:sl6` A image like `devenv_cvmfs:sl6` but it mounts CVMFS via nfs served by a container from the image above. 
 
-### Pulling the images
+## Which image to use?
 
-You can pull the images directly from [Docker Hub](http://hub.docker.com). The first image, `devenv:sl6`, is somewhat useless on its own as most of our physics code relies on CVMFS. It is best to pull one or both of the other images. 
+The following use cases are instructive for deciding which image to use. 
 
-If you never plan to use VNC, then,
-```bash
-docker pull lyonfnal/devenv_cvmfs:sl6
-```
+`devenv:sl6` is pretty useless on its own because it does not have CVMFS. It serves to be a base image for others. 
 
-If you plan to use VNC all the time, then
-```bash
-docker pull lyonfnal/devenv_cvmfs_vnc:sl6
-```
+`devenv_cvmfs:sl6` may be your main workhorse. A container from this image will start CVMFS on launch. Mounting CVMFS can take a minute or two. This overhead is acceptable if you plan to launch the container rarely. If you build and run code from the command line in the same session, that will be fine. The CLion for Mac integration can use `docker exec` to run commands in such a long-lived container. 
 
-Otherwise, just do both. It only takes about 2 GB on your disk.
-```bash
-docker pull lyonfnal/devenv_cvmfs_vnc:sl6 
-docker pull lyonfnal/devenv_cvmfs:sl6  # This won't actually download anything 
-```
-The second pull won't download anything because `devenv_cvmfs:sl6` is the base image for `devenv_cvmfs_vnc:sl6`.
+The usage pattern involving `devenv_cvmfs:sl6`, that is running it as a long-lived container (like a service or a remote machine), is not really the *docker way*. The *docker way* is to spin up the container quickly, run a particular command, and exit the container (e.g. with `docker run`). The long startup time for mounting CVMFS makes this *docker way* usage pattern difficult. The workaround is to have a long lived service that mounts CVMFS and serves it to ephemeral containers that can start very quickly. A container from the  `devenv_cvmfs_nfsserver:sl6` image is the long lived CVMFS service. Containers of the `devenv_cvmfs_nfsclient:sl6` image are the ephemeral ones that run a particular command. They mount CVMFS from the service via nfs, which is very fast. Furthermore, you can run two or more such containers simultaneously with the same CVMFS cache. The main use case here is to accommodate Mac applications that can work with docker, but insists on starting their own containers. 
 
-You need `devenv_cvmfs:sl6` if you use CLion on the Mac (see below). 
+Finally `devenv_cvmfs_vnc:sl6` makes a long lived container that mounts CVMFS and then runs VNC, giving you a full linux desktop experience. This can be useful for running linux GUI applications. VNC tends to be **much** faster than running graphics applications from forwarded X windows. You can also run openGL applications in VNC (though docker does not have access to your GPU, so it will be software 3D rendering).
 
-### Building the images
-
-You may build the images yourself instead of pulling from Docker hub. This will take a significant amount of time and requires a fast internet connection.  You should only do this if you want to make a change to a image. Better is to make a pull request and I can make your change in the repository. But if you really want to do the build yourself, you can do the following. Note that you may want to use a different identifier than `lyonfnal`. If you do that, you'll need to change the `FROM` declarations in each `Dockerfile`. 
-
-If you want to build the images as they are, then do the following
-
-```bash
-# Only if really necessary (prefer pull instead)
-cd Somewhere
-git clone https://github.com/lyon-fnal/devenv.git
-cd devenv
-cd devenv_sl6 ; docker build -t lyonfnal/devenv:sl6 . ; cd ..
-cd devenv-cvmfs_sl6 ; docker build -t lyonfnal/devenv_cvmfs:sl6 . ; cd ..
-cd devenv-cvmfs-vnc_sl6 ; docker build -t lyonfnal/devenv_cvmfs_vnc:sl6 . ; cd ..
-```
 
 ## Running the containers with `docker-compose`
 
@@ -165,9 +140,9 @@ To run the containers with `docker run` would require many, many options to the 
 
 You are likely wanting to run the container for a development purpose. Make a directory on your Mac for a development area. For example, I may choose `/Users/lyon/Development/gm2/laserCalib`. In that directory, make a `docker` sub-directory.
 
-Now copy the `docker-compose.yml-template` file from this repository. You may either check out the repository or download the file directly with [this url](https://raw.githubusercontent.com/downloads/lyonfnal/devenv/compose/docker-compose.yml-template). 
+Now copy the `docker-compose.yml-TEMPLATE` file from this repository. You may either check out the repository or download the file directly from [here](https://github.com/lyon-fnal/devenv/tree/master/compose). 
 
-Follow the instructions in the comments and replace the parts of the template. The `sed` command in the comments may make things easier. There are some notes to uncomment certain parts if you plan to use CLion (see below). You can do that now or later after setting things up (again, see below).
+Follow the instructions in the comments and replace the parts of the template.  There are some notes to uncomment certain parts if you plan to use CLion (see [here](clion.md)). You can do that now or later after setting things up (again, see below).
 
 ### A note about `docker-compose`
 Docker compose works like `vagrant`. `docker-compose` commands will look in the current directory for the `docker-compose.yml` configuration file.  This can be quite convenient. If you would rather operate out of a different directory, you can always add the `-f FILE` option and give the location of the file. For example,
@@ -177,66 +152,87 @@ docker-compose -f ../docker/docker-compose.yml ...   # if you aren't in the dire
 
 For the instructions below, we'll assume that you are in the directory with the `docker-compose.yml` file. 
 
-### The `docker-compose.yml` file
+### Features of  `docker-compose.yml` file
 
-Instructions above explain how to set up the `docker-compose.yml` file from the template. Here are some features of this configuration file.
+The docker-compose configuration file defines several services. `<NAME>` is the name you chose, such as the development area nane
 
-The `docker-compose.yml` file defines a configuration for running a docker container. Such a file is easier than figuring out the myriad of options you would need to `docker run`. The `docker-compose` system allows you to treat the container as a service running in the background. 
+* `devenv-<NAME>`: Service makes a long lived container from the `lyonfnal/devenv_cvmfs:sl6` image that mounts CVMFS at launch.
 
-The top part of the file defines which image to run and what the container should be called. The name of the container `<NAME>` should be something related to your development task, like `laserCalibDB`. The host name in the container is also set to this name so that a shell in that container is easily identifiable. 
+* `devenv-vnc-<NAME>`: Service makes a long lived container from the `lyonfnal/devenv_cvmfs_vnc:sl6` image that mounts CVMFS and runs VNC.
 
-Privilege settings are defined. To run CVMFS and `gdb`, the container must be launched with expanded security settings.
+* `cvmfs_nfs_server`: Service makes a long lived container from the `lyonfnal/devenv-cvmfs-nfsserver:sl6` image that mounts CVMFS and serves it via nfs for the client container (next).
 
-Next, several port mappings are made. They are all bound to the local host (`127.0.0.1`) just in case you didn’t change the docker configuration to make that the default. If you aren’t using a particular port, it’s ok to leave the mapping in place. 
+* `devenv-client-<NAME>`: Service makes a container from the `lyonfnal/devenv-cvmfs-nfsclient:sl6`. The container will launch very quickly and will exit when the command completes. It is not long lived. 
 
-Next are two lines commented out involving `env` and `build.env`. That’s for injecting environment variables into the container. We will use that later to quickly start a shell in the container. 
+For each service, the `docker-compose.yml` file defines environment variables, mounted volumes, security settings, and port mapping. 
 
-Much of the remainder of the file is for defining volumes. One of the main volumes is called `workdir` (you never see these volume names in the container). You’ll see towards the bottom that `workdir` is your Mac user area mounted via `nfs` for performance. The default is to mount `/Users/<USER>` (for example, `/Users/lyon`). The volume is mounted such that it has the same path in the container as it has on the Mac. This has many advantages when running an IDE on the Mac side. Note that you can restrict the directory mounted by putting that in `<USER>`, such as `lyon/Development/gm2/myDevArea`. My experience is that it is better to just mount the top level user directory. 
+## Running 
 
-The `cvmfs_cache` volume is the cvmfs cache area. Making this an external volume, as is done here, means the data is retained  when the container exits. This means that you do not need to repopulate the cache when you stop the container and start it again later. 
+Below are instructions for running the services in the `docker-compose.yml` file.
 
-Similarly, it is nice for the home area in the container to be retained from runs of the container. Making `/root` come from an external volume (`slash_root`) does that. 
-
-Finally, there are a few mounts from the Mac side that are necessary if you plan to run CLion. Those are mounted with the standard less than performant Docker mechanism since high performance is not needed there. 
-
-
- ### Run with `docker-compose run` [not typical]
+### Run a long lived container
  
- If you simply want to start the container and get a shell prompt and have the container exit when you are finished (e.g. not run it as a service - this is **not the typical way** to run the container), you can do,
- 
- ```bash
-cd /path/to/docker-compose-directory
-docker-compose run --rm --entrypoint /bin/bash <NAME>
-#   where <NAME> is the service name you chose when making the docker-compose.yml file
+The long lived services perform some action, like mount CVMFS and, perhaps, start VNC, and then wait to be killed. In general, you start the service with 
 
-# Now inside the container...
-/usr/local/bin/start_cvmfs.sh  # if you want CVMFS mounted
-# ... do stuff ...
-exit  
-# Container exits and is removed (external volumes stay)
-```
- 
- When you exit out of the container shell, the container exits and is removed.
- 
- ### Run as a service with `docker-compose up -d` [do this]
- 
- The typical way to run the container is as a service (this is advantageous as it takes time to mount `/cvmfs`), either with or without VNC (you made that choice when you created `docker-compose.yml` from the template). To start, do
- 
- ```bash
-cd /path/to/docker-compose-directory
-docker-compose up -d    # -d is for daemon mode
-docker-compose logs -f  # Watch CVMFS start up - takes a minute or two
-```
-
-The log will end with "Running until killed" or information about VNC. You can then `Ctrl-C` out of `docker-compose log`. The service will continue to run in the background. 
-
-To stop the container and take down and remove the service, do
 ```bash
-cd /path/to/docker-compose-directory
-docker-compose down
+docker-compose up -d <SERVICE>
 ```
 
-Note that the data in the external volumes are retained. 
+For example,
+```bash
+docker-compose up -d devenv-test
+```
+
+where `<SERVICE>` is the service you want to start. If you leave that off, all of the services in the file will be started, and you likely don't want that.
+
+Many of the services take awhile to start. You can look at progess with
+
+```bash
+docker-compose logs -f <SERVICE>
+```
+ 
+Type Ctrl-D to exit out. The service will continue run
+
+To stop a service, do 
+```bash
+docker-compose down <SERVICE>
+```
+
+To get a bash shell prompt from an "up" service, use `docker-compose exec`. For example,
+```bash
+docker-compose exec <SERVICE> /bin/bash
+``` 
+Exiting the shell does NOT stop the service. 
+
+To start a service to the prompt without initializing (not typical),
+```bash
+docker-compose run --rm --entrypoint /bin/bash <SERVICE>  # Not typical to run this way
+``` 
+The startup script will not run, and so CVMFS will not be mounted and VNC (if appropriate) will not run.
+
+### Running ephemeral containers 
+
+The ephemeral containers are those run by the `devenv-client-<NAME>` service that makes containers from the `devenv_cvmfs_nfsclient:sl6` image. These containers launch very quickly, mount CVMFS from nfs (very fast), run a command, and exit. 
+
+Before you launch such containers, the `cvmfs-nfs-server` container must be running. Start it with
+
+```bash
+docker-compose up -d cvmfs-nfs-server
+docker-compsoe logs -f cvmfs-nfs-server  # Wait for startup
+
+# Stop the service much later
+docker-compose down cvmfs-nfs-server
+```
+
+You can then run the ephemeral containers with 
+```bash
+docker-compose run --rm devenv-client-<NAME> command
+
+# Example
+docker-compose run --rm devenv-client-mydev mrb b
+```
+
+The ephemeral containers will likely need some environment setup. The best way to do that is with an environmeent file. See the [CLion documeentation](clion.md) for how to do that. 
 
 ### Connecting to the container with VNC
 
@@ -248,28 +244,13 @@ You may run a full Linux desktop with VNC. You must specify the `lyonfnal/devenv
  
  Note that you can quit Screen Sharing and restart it - your session will continue as it was. Stopping the service with `docker-compose down` will end your session. 
  
- ### Connecting to the container without VNC (shell)
- 
- If I am running CLion on my Mac and connecting to the container, I do not need VNC. Therefore I run the image without it. Follow the same instructions as *Run as a service* above. 
- 
- With the service running in the background, you can connect to a shell within with,
- 
- ```bash
-docker-compose exec <NAME> /bin/bash
-```
-where `<NAME>` is the name of the service you chose when you made the `docker-compose.yml` file. You will then have a fresh shell at the root prompt. CVMFS will be mounted already. 
-
-You may exit this shell back to your Mac. The service will continue to run. You may `docker-compose exec` in again.
-
-You may stop the service completely with `docker-compose down` as explained above. 
-
 ## Doing stuff
 
 The container should have the tools you need to do what you want. You can set up `mrb`, run `art` code, run `root`, etc. You can install linux software on your Mac volume and run it from the container (I used to run Linux CLion this way). If there's a basic tool or program you want included in the container, make a pull request to the Github repository. 
 
 ### Examining container resource usage with `netdata`
 
-The `netdata` server program is included in the image. You can run it by typing `netdata` at a shell prompt within the container. There will be no response. You may then use your Mac web browser (e.g. Safari) and go to `localhost:19998`. You can then explore nearly endless aspects of what the container is doing. 
+The `netdata` server program is included in the image. You can run it in a long lived container by typing `netdata` at a shell prompt within the container. There will be no response. You may then use your Mac web browser (e.g. Safari) and go to `localhost:19998`. You can then explore nearly endless aspects of what the container is doing. 
 
 
  
