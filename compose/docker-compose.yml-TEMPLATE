@@ -1,0 +1,113 @@
+# docker-compose file for devenv based images and containers
+
+# You need to replace <USER> (twice), <EXP>, and <NAME> (several times)
+
+# Four services are defined (each except for cvmfs_nfs_server ends in -<NAME>)
+#  Regular stand-alone containers - Long CVMFS start up time is incurred at run
+#    devenv     -  From devenv_cvmfs:sl6 image
+#    devenv_vnc -  From devenv_cvmfs_vnc:sl6 image
+
+#  CVMFS from a service. Running devenv_client has fast startup time
+#    cvmfs_nfs_server  - from devenv_cvmfs_nfsserver:sl6 image
+#    devenv_client     - from devenv_cvmfs_nfsclient:sl6 image
+## A dependency is defined here so that starting devenv_client automatically starts cvmfs_nfs_server
+
+## We'll use YAML anchors and aliases to avoid repeating chunks of the settings configurations
+## See https://nickjanetakis.com/blog/docker-tip-82-using-yaml-anchors-and-x-properties-in-docker-compose and
+## and https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd for more info
+
+version: '3.7'
+
+x-environment: &default-environment
+  environment:
+    - CVMFS_EXP=<EXP>   # Replace <EXP> with your experiment name
+    - DISPLAY=docker.for.mac.localhost:0
+
+x-env-file: &default-env-file
+#  env_file:
+#    - ./build.env
+
+x-volumes1: &default-volumes-nocvmfs
+  volumes:
+    - workdir:/Users/lyon
+    - slash_root_<NAME>:/root
+#    - /private:/private               # Uncomment if running CLion on Mac
+#    - /Applications:/Applications:ro  # Uncomment if running CLion on Mac
+
+x-volumes2: &default-volumes-cvmfs
+  volumes:
+    - workdir:/Users/lyon
+    - slash_root:/root
+#    - /private:/private               # Uncomment if running CLion on Mac
+#    - /Applications:/Applications:ro  # Uncomment if running CLion on Mac
+
+x-worker: &default-worker
+  security_opt: # options needed for gdb debugging
+    - seccomp:unconfined
+    - apparmor:unconfined
+  cap_add:      # also needed for gdb
+    - SYS_PTRACE
+  privileged: true
+  ports:
+    - "127.0.0.1:19998:19999" # netdata
+    - "127.0.0.1:7777:7777"   # gdb
+    - "127.0.0.1:5901:5901"   # VNC - ok to have even if you aren't using it
+  command: /bin/bash
+  <<: *default-environment
+#  <<: *default-env-file
+
+
+services:
+
+  # devenv-<NAME>
+  devenv-<NAME>:
+    image: lyonfnal/devenv_cvmfs:sl6
+    hostname: devenv-<NAME>
+    <<: *default-worker
+    <<: *default-volumes-cvmfs
+
+  # devenv-vnc-<NAME>
+  devenv-vnc-<NAME>:
+    image: lyonfnal/devenv_cvmfs_vnc:sl6
+    hostname: devenv-vnc-<NAME>
+    <<: *default-worker
+    <<: *default-volumes-cvmfs
+
+  # cvmfs_nfs_server  -- Mounts and serves CVMFS to other containers via NFS
+  # There is no way to expose the nfs server to the mac host. This is a limitation of docker for mac.
+  #   The mac does not have direct access to the container's network and therefore cannot treat the container
+  #   as a different machine. CVMFS also does not seem to support nfs4
+  cvmfs_nfs_server:
+    image: lyonfnal/devenv_cvmfs_nfsserver:sl6
+    hostname: cvmfs_nfsserver
+    privileged: true
+    <<: *default-environment
+    volumes:
+      - cvmfs_cache_nfs:/var/lib/cvmfs
+
+  # devenv-client-<NAME>
+  #   This container runs command and exits, so can't do "up"
+  devenv-client-<NAME>:
+    image: lyonfnal/devenv_cvmfs_nfsclient:sl6
+    hostname: devenv-client-test
+    depends_on:
+      - cvmfs_nfs_server
+    <<: *default-worker
+    <<: *default-volumes-nocvmfs
+
+volumes:
+  workdir:           # /Users/<USER>
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":/Users/<USER>"
+
+  slash_root_<NAME>:        # /root
+    external: true
+
+  cvmfs_cache:       # Cache for non-NFS served CVMFS
+    external: true
+  cvmfs_cache_nfs:   # Cache for NFS served CVMFS
+    external: true
+
