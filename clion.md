@@ -63,6 +63,12 @@ where `Project name` is the name you want for the project. The next time you sta
 
 Now, let's fix the CMake problem. You should see a `CMake` window with the failure. To the left of that window are some icons. Click on the Settings icon (the gear wheel) and select "CMake settings". Change the "Generation path" to the build directory for your development area (e.g. for me it may be `/path/to/dev_area/build_slf6.x86_64`). 
 
+If you want to use `make` for builds, you can just press "OK" in the dialog window. Note that as of CLion 2019.3 EAP, you can now compile with `Ninja` (this is a **major** improvement)! You must use a version of CMake that is at or greater than v3.15. As of writing this file, SciSoft does not have such a version, but you can use the version bundled with CMake. Adjust the toolchain settings to use it (make sure the other settings are the same). Then back to the CMake settings, in the `CMake Options` bar, add `-Wno-dev -G Ninja`. Note that when CMake runs, you may see some benign warnings from this late CMake version. For the configuration, look at the figure below for comparison. 
+
+![ninja settings](documentation/ninja_settings.png)
+
+You should remember that for art-based code, `ninja` is not as robust as `make` in determining all dependencies. In particular, it may not notice when a Root dictionary file needs to be re-generated. If you run and get a Segfault, the first thing to try is to zap your build area (`mrb zap`) and make a fresh build. 
+
 Once you do the above, `CMake` will run and should complete successfully. If it doesn't, you may need to click on the setting wheel again and choose "Reset Cache and Reload Project".
 
 CLion will have created a directory `srcs/cmake-build-debug` from the failed build. You may delete this directory.

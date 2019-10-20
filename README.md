@@ -168,7 +168,7 @@ For each service, the `docker-compose.yml` file defines environment variables, m
 
 ## Running 
 
-Below are instructions for running the services in the `docker-compose.yml` file.
+Below are instructions for running the services in the `docker-compose.yml` file. Note that you may get an 
 
 ### Run a long lived container
  
@@ -193,9 +193,9 @@ docker-compose logs -f <SERVICE>
  
 Type Ctrl-D to exit out. The service will continue run
 
-To stop a service, do 
+To stop all services, do 
 ```bash
-docker-compose down <SERVICE>
+docker-compose down
 ```
 
 To get a bash shell prompt from an "up" service, use `docker-compose exec`. For example,
@@ -221,7 +221,7 @@ docker-compose up -d cvmfs-nfs-server
 docker-compsoe logs -f cvmfs-nfs-server  # Wait for startup
 
 # Stop the service much later
-docker-compose down cvmfs-nfs-server
+docker-compose down
 ```
 
 You can then run the ephemeral containers with 
@@ -234,9 +234,15 @@ docker-compose run --rm devenv-client-mydev mrb b
 
 The ephemeral containers will likely need some environment setup. The best way to do that is with an environmeent file. See the [CLion documeentation](clion.md) for how to do that. 
 
+### Some notes
+
+This `docker-compose` configuration is not really set up to run containers from different development areas simultaneously. If you try this, you may need to change the host port numbers or use ephemeral ports. You should not run more than one `cvmfs_nfs_server` container as all such server containers share the same cache volume.  You can certainly change the compose file to suit your needs (e.g. remove services you'll never use).
+
+You may want to have one `docker-compose.yml` file for your entire development setup (e.g. not make one per development area). That would allow you to run more containers simultaneously with changes to the file. 
+
 ### Connecting to the container with VNC
 
-You may run a full Linux desktop with VNC. You must specify the `lyonfnal/devenv_cvmvs_vnc:sl6` image in the `docker-compose.yml` file and start the container as a service as per above. Your Mac comes with a VNC-viewer called `Screen Sharing`. Bring up `Screen Sharing` (you can use "Spotlight Search" by Command-Space and search for it or from the Finder in `Macintosh HD -> System -> Library -> CoreServices -> Applications -> Screen Sharing`). In the "Connect To" box type `localhost:5901` (you'll note that the 5901 port is specified in the `docker-compose.yml` file). The VNC password is `devenv`. You may see a warning about running as the Superuser. You can ignore it. I like to maximize the Screen Sharing window (green expand button on the  upper left). On the top menu bar, the right most icon that looks like a terminal will open a terminal window.  
+You may run a full Linux desktop with VNC. You must us the `denenv-vnc-<NAME>` service in the `docker-compose.yml` file as per above. Your Mac comes with a VNC-viewer called `Screen Sharing`. Bring up `Screen Sharing` (you can use "Spotlight Search" by Command-Space and search for it or from the Finder in `Macintosh HD -> System -> Library -> CoreServices -> Applications -> Screen Sharing`). In the "Connect To" box type `localhost:5901` (you'll note that the 5901 port is specified in the `docker-compose.yml` file). The VNC password is `devenv`. You may see a warning about running as the Superuser. You can ignore it. I like to maximize the Screen Sharing window (green expand button on the  upper left). On the top menu bar, the right most icon that looks like a terminal will open a terminal window.  
  
  You can change the desktop screen size with `System -> Preferences -> Display`. I use 2880x1800 when connected to a big screen and 1920x1200 when on my laptop proper. 
  

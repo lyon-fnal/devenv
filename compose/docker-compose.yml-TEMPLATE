@@ -6,16 +6,47 @@
 #  <EXP> is your experiment for CVMFS. E.g. nova or gm2
 #  <NAME> is a name for identifying the containers you'll create.
 #         The name of the development area may be a good choice
+#
+#  Here is an example command to do these replacements
+#  sed -e 's/<USER>/lyon/g' -e 's/<EXP>/gm2/g' -e 's/<NAME>/laserDev/g' docker-compose.yml-TEMPLATE > docker-compose.yml
+#
+#  Perhaps remove the comments above after replacement
 
-# Four services are defined (each except for cvmfs_nfs_server ends in -<NAME>)
+# Quick list of commands
+#  devenv-<NAME>: Long lived container with CVMFS
+#      docker-compose up -d devenv-<NAME>           # Start
+#      docker-compose logs -f devenv-<NAME>         # Check start of CVMFS
+#      docker-compose exec devenv-<NAME> /bin/bash  # Shell into the container
+#      docker-compose down                          # Stop
+
+#  devenv-vnc-<NAME>: Long lived container with CVMFS and running VNC
+#      docker-compose up -d devenv-vnc-<NAME>       # Start
+#      docker-compose logs -f devenv-vnc-<NAME>     # Check start of CVMFS
+#        Connect your VNC viewer to localhost:5901
+#      docker-compose down                          # Stop
+
+#  cvmfs_nfs_server: Long lived container that serves CVMFS to other containers
+#      docker-compose up -d cvmfs_nfs_server       # Start
+#      docker-compose logs -f cvmfs_nfs_server     # Check start of CVMFS
+#        You do not directly interact with this container/service
+#      docker-compose down                         # Stop
+
+#  devenv-client-<NAME>: Ephemeral containers that get CVMFS from cvmfs_nfs_server
+#      docker-compose run --rm devenv-client-<NAME> /bin/bash   # (or other command)
+#        If cvmfs_nfs_server is not running, it will be started. But because of its startup time, a command
+#                 in this container may fail. Wait for cvmfs_nfs_server to completely start.
+
+# -- Details:
+# Four services are defined
 #  Regular stand-alone containers - Long CVMFS start up time is incurred at run
-#    devenv     -  From devenv_cvmfs:sl6 image
-#    devenv-vnc -  From devenv_cvmfs_vnc:sl6 image
+#    devenv-<NAME>     -  From devenv_cvmfs:sl6 image
+#    devenv-vnc-<NAME> -  From devenv_cvmfs_vnc:sl6 image
 
-#  CVMFS from a service. Running devenv_client has fast startup time
-#    cvmfs-nfs-server  - from devenv_cvmfs_nfsserver:sl6 image
-#    devenv-client     - from devenv_cvmfs_nfsclient:sl6 image
-## A dependency is defined here so that starting devenv_client automatically starts cvmfs_nfs_server
+#  CVMFS from a service. Running devenv-client-<NAME> has fast startup time
+#    cvmfs_nfs_server         - from devenv_cvmfs_nfsserver:sl6 image
+#    devenv-client-<NAME>     - from devenv_cvmfs_nfsclient:sl6 image
+#  A dependency is defined here so that starting devenv-client-<NAME> automatically starts cvmfs_nfs_server
+#    But because cvmfs_nfs_server takes a while to start, initial commands in devenv-client-<NAME> may fail.
 
 ## We'll use YAML anchors and aliases to avoid repeating chunks of the settings configurations
 ## See https://nickjanetakis.com/blog/docker-tip-82-using-yaml-anchors-and-x-properties-in-docker-compose and
@@ -27,25 +58,26 @@ version: '3.7'
 
 x-environment: &default-environment
   environment:
-    - CVMFS_EXP=<EXP>   # Replace <EXP> with your experiment name
+    - CVMFS_EXP=<EXP>
     - DISPLAY=docker.for.mac.localhost:0
 
 x-env-file: &default-env-file
 #  env_file:
 #    - ./build.env
 
-# YAML does not merge sequences (sigh), hence thee repetition below
+# YAML does not merge sequences (sigh), hence the repetition below
 x-volumes1: &default-volumes-nocvmfs
   volumes:
-    - workdir:/Users/lyon
+    - workdir:/Users/<USER>
     - slash_root_<NAME>:/root
 #    - /private:/private               # Uncomment if running CLion on Mac
 #    - /Applications:/Applications:ro  # Uncomment if running CLion on Mac
 
+
 x-volumes2: &default-volumes-cvmfs
   volumes:
-    - cvmfs_cache:/var/lib/cvmfs
-    - workdir:/Users/lyon
+    - cvmfs_cache_<NAME>:/var/lib/cvmfs
+    - workdir:/Users/<USER>
     - slash_root_<NAME>:/root
 #    - /private:/private               # Uncomment if running CLion on Mac
 #    - /Applications:/Applications:ro  # Uncomment if running CLion on Mac
@@ -58,9 +90,9 @@ x-worker: &default-worker
     - SYS_PTRACE
   privileged: true
   ports:
-    - "127.0.0.1:19998:19999" # netdata
-    - "127.0.0.1:7777:7777"   # gdb
-    - "127.0.0.1:5901:5901"   # VNC - ok to have even if you aren't using it
+    - 127.0.0.1:19999:19999  # netdata
+    - 127.0.0.1:7777:7777   # gdb
+    - 127.0.0.1:5901:5901   # VNC - ok to have even if you aren't using it
   command: /bin/bash
   <<: *default-environment
 #  <<: *default-env-file
@@ -82,13 +114,13 @@ services:
     <<: *default-worker
     <<: *default-volumes-cvmfs
 
-  # cvmfs-nfs-server  -- Mounts and serves CVMFS to other containers via NFS
+  # cvmfs_nfs_server  -- Mounts and serves CVMFS to other containers via NFS
   # There is no way to expose the nfs server to the mac host. This is a limitation of docker for mac.
   #   The mac does not have direct access to the container's network and therefore cannot treat the container
   #   as a different machine. CVMFS also does not seem to support nfs4
-  cvmfs-nfs-server:
+  cvmfs_nfs_server:
     image: lyonfnal/devenv_cvmfs_nfsserver:sl6
-    hostname: cvmfs_nfsserver
+    hostname: cvmfs_nfs_server
     privileged: true
     <<: *default-environment
     volumes:
@@ -98,7 +130,7 @@ services:
   #   This container runs command and exits, so can't do "up"
   devenv-client-<NAME>:
     image: lyonfnal/devenv_cvmfs_nfsclient:sl6
-    hostname: devenv-client-test
+    hostname: devenv-client-<NAME>
     depends_on:
       - cvmfs_nfs_server
     <<: *default-worker
@@ -115,7 +147,7 @@ volumes:
   slash_root_<NAME>:        # /root
     external: true
 
-  cvmfs_cache:       # Cache for non-NFS served CVMFS
+  cvmfs_cache_<NAME>:       # Cache for non-NFS served CVMFS
     external: true
   cvmfs_cache_nfs:   # Cache for NFS served CVMFS
     external: true
