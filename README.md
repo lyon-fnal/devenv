@@ -62,6 +62,8 @@ This setting eliminates the possibility of a security problem with docker.
 
 If you've made any changes, click on "Apply & Restart". 
 
+Note that you can make your life easier with bash command completion. See [here](https://docs.docker.com/compose/completion/) for how to install that. Follow the Mac instructions. 
+
 ### Prepare NFS
 
 For the best performance, your `/Users` directory will be served into the docker container with `nfs`. I have found this technique to be the most performant way to access data on the Mac from the container. It is a little complicated to set up, so we'll do it only for the directory that matters - that is where all your code files exist in `/Users`. To do this, you need to follow these steps from a Mac terminal:

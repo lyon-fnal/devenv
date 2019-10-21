@@ -1,0 +1,9 @@
+#!/bin/bash
+
+command=`basename "$0"`
+
+if [[ $(uname -s) == Darwin ]]; then
+  docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T -w "$PWD" "$SERVICE" $command "$@"
+else
+  $command "$@"
+fi

@@ -1,5 +1,6 @@
-# CLion and the `devenv` container
+# CLion for Linux and the `devenv` containers
 
+Adam Lyon (October 2019)
 ## Introduction
 
 [CLion](https://www.jetbrains.com/clion/) is an excellent C++ Integrated Development Environment from [JetBrains](https://www.jetbrains.com). I find it indispensable for coding in C++. You can easily run CLion within the container with VNC, and instructions here will guide you through setting that up. However, you may be disappointed if you are used to the Mac experience (exceptionally clear fonts, Mac key shortcuts, full screen, etc). This document will guide you through a rather lengthy but working process to use CLion on the Mac to develop within the `devenv` Linux container. 
@@ -113,8 +114,7 @@ Using CLion on Linux with VNC is quite convenient and is an easy way to get star
 
 ## Mac CLion
 
-Now the real fun begins ... to be continued ...
-
+This section and the remainder of the document will explain how to use CLion for the Mac to do development within a `devenv` container. 
 
 
 

@@ -73,7 +73,6 @@ x-volumes1: &default-volumes-nocvmfs
 #    - /private:/private               # Uncomment if running CLion on Mac
 #    - /Applications:/Applications:ro  # Uncomment if running CLion on Mac
 
-
 x-volumes2: &default-volumes-cvmfs
   volumes:
     - cvmfs_cache_<NAME>:/var/lib/cvmfs
