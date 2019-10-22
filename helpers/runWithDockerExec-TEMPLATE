@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Make the concrete file...
+#
+#  cd to the directory with your docker-compose.yml file
+#  mkdir helpers ; cd helpers
+#
+#  !!! In below, replace --name-- with the <NAME> of the service. e.g. devenv-<NAME>
+#  sed -e "s#<PATH>#${PWD}#" -e 's/<NAME>/--name--/' /path/to/runWithDockerExec-TEMPLATE > runWithDockerExec
+#
+#  chmod a+x runWithDockerExec
+
+#  Make the symbolic links. Be sure to replace <EXP> below with your experiment's art command (e.g. gm2 or nova)
+#  for i in cmake g++ gcc make <EXP>; do ln -s runWithDockerExec $i ; done
+
+command=$(basename "$0")
+
+if [[ $(uname -s) == Darwin ]]; then
+  docker-compose -f <PATH>/../docker-compose.yml exec -T -w "$PWD" devenv-<NAME> "$@" $command
+else
+  $command "$@"
+fi
