@@ -260,6 +260,9 @@ The container should have the tools you need to do what you want. You can set up
 
 The `netdata` server program is included in the image. You can run it in a long lived container by typing `netdata` at a shell prompt within the container. There will be no response. You may then use your Mac web browser (e.g. Safari) and go to `localhost:19998`. You can then explore nearly endless aspects of what the container is doing. 
 
+### Running CLion
+
+See [clion-linux.md](clion-linux.md) for running CLion under Linux within the container. See [clion-mac.md](clion-mac.md) for running CLion under the Mac using a `devenv` container.  
 
  
  

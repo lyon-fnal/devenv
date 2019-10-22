@@ -25,6 +25,8 @@ Then, you must install CVMFS on your Mac and configure it to mount the same CVMF
 
 Because we are going to use CVMFS only for headers and some source code, the amount of data you'll cache from CVMFS on your Mac will be small.
 
+See [here](https://cdcvs.fnal.gov/redmine/projects/novaart/wiki/Setting_up_NOvA_Software_on_your_Laptop) for an example of setting up CVMFS on your Mac. 
+
 ### Perhaps install a late version  Linux CMake
 If you want to do builds with `ninja` (yes, you do) instead of `make`, then you'll need a late version of CMake. To do builds with ninja, CLion requires CMake v3.15 or later - that's likely much later than what you use in your release and what is on SciSoft. Choose an area on your Mac (I do `/Users/lyon/Development/CMake`) and [download](https://cmake.org/download/) the **linux** (not Mac) CMake `.tar.gz` file (I did v3.15.4). `tar xf` the tar file to unwind it. 
 
@@ -42,8 +44,10 @@ We want to be able to run commands in the container quickly with a minimum of st
 
 * Incur the CVMFS mount time once and not per each command. We'll `docker-compose exec` into a container that already has CVMFS running. 
 * We'll store the development environment (environment variables) and use `docker-compose` to quickly reinstate it when we run a command in the container with `docker-compose exec`.    
+
+### Capture your development environment to an `.env` file
  
- Prepare the `docker-compose.yml` file as per [README.md](README.md) and start the `devenv-<NAME>` service (where `<NAME>` is the descriptive name you gave to identify the containers/service). For example `docker-compose up -d devenv-<NAME>`. Now, `docker-compose exec devenv-<NAME> /bin/bash` to start a shell. Set up your development area and checkout source code. 
+ Prepare the `docker-compose.yml` file as per [README.md](README.md) and start the long lived `devenv-<NAME>` service (where `<NAME>` is the descriptive name you gave to identify the containers/service). For example `docker-compose up -d devenv-<NAME>`. Now, `docker-compose exec devenv-<NAME> /bin/bash` to start a shell in the container. Set up your development area and checkout source code. 
  
  If you use the `art` framework, then you must make your own local release of `cetbuildtools`. That is because the `cetbuildtools` CMake macros perform a check that our scripts will violate. With your own version of `cetbuildtools`, you can circumvent the check. To do this, look at the version of cetbuildtools that you use (e.g. setup your environment to the point where you can do a build and look at `$CETBUILDTOOLS_DIR` and note the version). With your Mac web browser, go to https://scisoft.fnal.gov/scisoft/packages/cetbuildtools and find that version. Download the `cetbuildtools-XX-noarch.tar.bz2` to your `localProducts...` directory with `wget` and unwind with `tar xf <.tar.bz2> file`. Now do your build environment setup again (e.g. `. mrb s`).  Do `ups active` to ensure that `cetbuildtools` comes from your local products area. You can remove the tar file now. 
  
