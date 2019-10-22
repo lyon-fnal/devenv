@@ -10,8 +10,12 @@
 #
 #  chmod a+x runWithDockerExec
 
-#  Make the symbolic links. Be sure to replace <EXP> below with your experiment's art command (e.g. gm2 or nova)
-#  for i in cmake g++ gcc make <EXP>; do ln -s runWithDockerExec $i ; done
+#  Make the symbolic links
+#  for i in cmake g++ gcc make; do ln -s runWithDockerExec $i ; done
+#
+#  Need a real copy for your <EXP> executable (replace <EXP> with that, e.g. nova, gm2, etc)
+#    because CLion will insist on resolving the synbolic link to the target
+#  cp runWithDockerExec <EXP>
 
 command=$(basename "$0")
 

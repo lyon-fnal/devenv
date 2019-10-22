@@ -63,7 +63,7 @@ x-environment: &default-environment
 
 x-env-file: &default-env-file
 #  env_file:
-#    - ./build.env
+#    - ./<ENV_NAME>.env
 
 # YAML does not merge sequences (sigh), hence the repetition below
 x-volumes1: &default-volumes-nocvmfs

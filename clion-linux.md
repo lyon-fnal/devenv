@@ -100,8 +100,6 @@ Optional - set up to run a FCL file:
 
 You may now build, run, and debug the program. 
 
-Note that CLion will use `make` for builds, not `ninja`. JetBrains is considering allowing use of ninja, but hasn't done it yet. Someone wrote a script to force CLion to use Ninja [here](https://gist.github.com/arichardson/3de8adaebec0d488c13911edd2e0fe63) but I have not tried it. If you understand your dependencies well, you may be able to choose a particular CMake target instead of All to reduce the unnecessary compilation checks. You can also remove building from the Run/Build configuration. 
-
 ### Debugging
 
 Debugging should work as expected. One complication is that STL variables (vectors, strings, etc) will not print in a nice way. Turning on the pretty printers requires running a different (and much newer) version of python. The docker image has such a version, but it is difficult to set up and use. Ask me if you really want to try it. 

@@ -174,12 +174,85 @@ And now CMake should run to completion! You may see some warnings and you may ig
 
 After CMake finishes, CLion will gather symbol information and index the code (you'll see an indication of this in the status bar at the bottom of the CLion window). This may take a long time and some functionality is limited while this is happening. It only takes a long time the first time it indexes. 
 
+### Building with Mac CLion
 
+In the upper toolbar, you should see the Run/Build configuration box. See the figure with the button explanations. 
 
-  
+![Run-build-config](documentation/run_build_config.png)
+ 
+ It will likely choose a random CMake target (or maybe a test target). The word after the vertical pipe will be the build type (Debug or Default) along with the toolchain name (not shown in this page). Typically, you want to build all targets, which is not one of the choices (unlike in the figure). Apparently, building all targets is not a normal thing to do with CMake. We need to add it.  You can set that up with the following steps...
+ 
+1. Click on the Run/Build Config box and select "Edit Configurations..." . Note that if CLion is indexing your code, you may not see this option. You'l have to wait for the indexing to complete. 
+1. In the new dialog box, click on the + in the upper left hand corner and choose "CMake Application"
+1. For Target, choose "All targets" (it should be somewhere in the drop down list). 
+1. Set the Name to "All" or something like that
+1. You can click OK, or continue with this dialog box and set up to run a FCL file
 
+Optional - set up to run a FCL file:
+1. For "Executable", click on the text bar and do "Select other..." and navigate to your <EXP> helper script in your helpers directory. 
+1. For "Program arguments" add the `-c FCL_FILE` and other options
+1. For "Working directory" choose the appropriate directory.  Note that in the directory chooser dialog box, one of the buttons will conveniently take you to your project directory.
+1. Click OK
+
+You may now build, run, and debug the program (see below for how to debug). 
+
+### Debugging
+
+To do debugging, we'll set up a Remote `gdbserver` in the container and then talk to it with `gdb` from the Mac. 
+
+CLion comes with its own `gdb`, but I find that it does not work in that it cannot determine variable values. That's a big limitation. The `gdb` out of Homebrew works just fine. To install it on your Mac, assuming you have [Homebrew](https://brew.sh), do
+```shell script
+brew install gdb --with-all-targets
+```
+See [here](http://tomszilagyi.github.io/2018/03/Remote-gdb-with-stl-pp) for more information. 
+
+Now we need to make a new remote debug configuration. From the Run/Build Configuration box and choose "Edit Configurations". Press the "+" and select "GDB Remote Debug". Give the configuration a name. If you have the Homebrew `gdb` selected in the tool chain, select that gdb executable. For "target remote args" do 
+```shell script
+localhost:7777
+```
+The `docker-compose` file publishes port 7777. 
+
+That's all you need to fill out; click OK.
+
+To start debugging, open a bash shell in the container (`docker-container exec devenv-<NAME> /bin/bash`) and `cd` to the right place. Then run `gdbserver` with,
+```shell script
+gdbserver :7777 <EXP> -c <FCL FILE> ...
+```
+Where `<EXP>` is your experiment art executable (`nova`, `gm2`, etc) followed by arguments. That will start the `gdbserver` and will wait for a connection.
+
+Back in CLion, select the GDB Remote Debug configuration in the Run/Build box and click on the "bug" symbol to debug. In the new debug pane, click on "Debugger" and then "GDB" and watch the start up. If you are populating CVMFS, which you may be if you are debugging for the first time, then `gdb` may timeout and the `gdbserver` will quit. Try the process again and it should work. 
+
+You should be able to do a full debug with all the features as if you are local. 
+
+There are ways to use CLion to start the `gdbserver`, but that's beyond the scope of this document. 
 
 ## Appendix
+
+### How the CMake in docker setup works
+
+Some random notes on how this system works and why some choices were made so I don't forget.
+
+The goal here is to allow **performant** and, at a slightly less priority, convenient use of CLion on the Mac for Linux development. Performance is the key. CLion has a remote development mode, but is uses `ssh` and it seems to call it a lot to get into the remote side for many tasks. CLion also wants to copy files between the remote and local sides. The fact that our development environment requires substantial initialization means that each `ssh` call incurs substantial overhead along with file movement. Performance suffers to the point that the system is unusable. 
+
+To mitigate these problems, the system here,
+* Uses docker for very performant linux access
+* Docker accesses the local filesystem in a performant way (nfs).
+* The "local" and "remote" paths are the same, so no file movement is necessary
+* docker-compose can store an environment and apply it to a container quickly, so overhead is very low
+* CVMFS, which incurs a very long mount time, can be done once for the container.
+
+---
+
+CLion asks for the location of `cmake`, `make`, the C and C++ compilers, and `gdb` in the Toolchain preference pane. To make these applications run within a docker container, we need a helper script that go into the container, with the correct environment, at the correct directory, and run the program with the correct arguments. Since the `docker` call is the same for all of these programs, there is a script `runWithDockerExec` that does that work. It would be nice to have this one script and somehow pass in the program to run, but this needs to look like the programs themselves (from the Mac CLion point of view). So the way this works is that you cop this script to your working area, which some changes to bake in the location of the docker-compose.yml file and the service to talk do, and then make soft links to this script with the names of the needed programs (`cmake`, etc). The script can figure out the name of the program from `$0`.
+
+The locations of these soft links must then be filled into the toolchain pane. Despite `cmake` doing nearly all of the work of setting up the project, CLion goes in after `cmake` runs and determines dependencies by running the compiler directly on particular files. For some reason, it gets the location of the compiler from `cmake`, not the entries in the toolchain. I think this is the only time when CLion actually directly runs the compilers (not for building, since it just calls `cmake --build`).  Therefore, the compiler path that `cmake` knows must point to an application that the **Mac** can run. That is, you can't play a trick of overriding the compiler paths in cmake options to their linux paths (if you could do this, then you would not need to remove the compiler path check in `cetbuildtools`). The compiler paths must be to the helper soft links. The `runWithDockerExec` must be smart to know that if it is called from the Mac, it runs in the container. If it is called from Linux, then it just runs the program directly. 
+
+Just to make this clear...
+1. The compiler paths in the toolchain must point to the helper symlinks
+1. CLion calls `cmake` (the helper sym-link) with command line options to set  `-DCMAKE_C_COMPILER` and `-DCMAKE_CXX_COMPILER` to the paths in the toolchain. 
+1. cmake on linux uses those compiler paths to prepare the project.
+1. Once cmake is done, CLion on the Mac calls the compilers directly to determine dependencies. It does not get the paths to the compilers from the toolchain, but rather from `cmake` itself. Therefore, those paths that were passed into cmake must point to scripts that the Mac can run as well as Linux.
+
 
 
 
