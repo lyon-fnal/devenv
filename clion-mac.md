@@ -76,7 +76,7 @@ IMPORTANT: Now, exit from the shell and bring down the container with `docker-co
 
 Now, on the Mac with an editor, edit the `docker-compose.yml` for your development area. First, uncomment the two lines under `x-env-file: &default-env-file` to read,
 
-```yaml
+```
 x-env-file: &default-env-file
   env_file
     - ./<ENV_NAME>.env
@@ -87,7 +87,7 @@ Wheere `<ENV_NAME>` is the name you chose earlier.
 Now, also uncomment the two lines each under `x-volumes1` and `x-volumes2` involving mounting `/private` and `/Applications` (so uncomment four lines total). The docker container will need access to those areas.
 
 Now, uncomment the last line of the block with `x-worker`. That is,
-```yaml
+```
   <<: *default-environment   # I uncommented
 ``` 
  
