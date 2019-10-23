@@ -7,7 +7,7 @@ See the introduction in [CLion for Linux](clion-linux.md).
 
 If you have not tried CLion before, you may want to start with [CLion for Linux](clion-linux.md) as configuring it is much easier than CLion for Mac. If you decide you like it, then come back here and do the instructions. If you do this, you should remove the CLion project files so that CLion for Mac won't get confused. You can do that with `rm -rf /path/to/devArea/srcs/.idea`. 
 
-This document will guide you through using CLion on your Mac, but building, running and debugging a Fermilab physics experiment Linux application in a docker container. Unfortunately, CLion cannot deal directly with docker containers. It does have a *Remote Development* facility, but it works via `ssh` and wants to copy files locally. The `devenv` docker containers use your source code and build areas on your Mac filesystem, needing no copies. 
+This document will guide you through using CLion on your Mac for building, running and debugging a Fermilab physics experiment Linux application in a docker container. Unfortunately, CLion cannot deal directly with docker containers. It does have a *Remote Development* facility, but it works via `ssh` and wants to copy files locally. The `devenv` docker containers use your source code and build areas on your Mac filesystem, needing no copies. 
 
 The advantages of running CLion for the Mac are clear when you start it. The fonts are exceptionally clear, the keyboard shortcuts are familiar, and some things even work better like debugging. 
 
@@ -21,7 +21,7 @@ First, set up the `devenv` containers as per the [README.md](README.md) file.
 Then, you must install CVMFS on your Mac and configure it to mount the same CVMFS repositories that you use in the `devenv` container. You must do this so CLion can find headers and source code in `/cvmfs`. Unfortunately, despite haivng a `cvmfs_nfs_server` container that can serve CVMFS via NFS, there seems to be no way to export that to the host Mac. There are two main reasons for this deficiency,
 
 * Docker for Mac does not expose the docker network to the Mac host. This is because docker actually runs a virtual machine behind the scenes and the Mac has no easy access to that.
-* You can forward one or more ports to the Mac host, but NFSv3 uses many ports that will conflict with NFS running on your Mac (in order to serve your `/Users` area to the container). NFSv4 offers mounting nfs volumes with only one port, and that would be idea and even usable, but CVMFS does not seem to work with NFSv4. 
+* You can forward one or more ports to the Mac host, but NFSv3 uses many ports that will conflict with NFS running on your Mac (in order to serve your `/Users` area to the container). NFSv4 offers mounting nfs volumes with only one port, and that would be ideal and even usable, but CVMFS does not seem to work with NFSv4. 
 
 Because we are going to use CVMFS only for headers and some source code, the amount of data you'll cache from CVMFS on your Mac will be small.
 
@@ -49,7 +49,7 @@ We want to be able to run commands in the container quickly with a minimum of st
  
  Prepare the `docker-compose.yml` file as per [README.md](README.md) and start the long lived `devenv-<NAME>` service (where `<NAME>` is the descriptive name you gave to identify the containers/service). For example `docker-compose up -d devenv-<NAME>`. Now, `docker-compose exec devenv-<NAME> /bin/bash` to start a shell in the container. Set up your development area and checkout source code. 
  
- If you use the `art` framework, then you must make your own local release of `cetbuildtools`. That is because the `cetbuildtools` CMake macros perform a check that our scripts will violate. With your own version of `cetbuildtools`, you can circumvent the check. To do this, look at the version of cetbuildtools that you use (e.g. setup your environment to the point where you can do a build and look at `$CETBUILDTOOLS_DIR` and note the version). With your Mac web browser, go to https://scisoft.fnal.gov/scisoft/packages/cetbuildtools and find that version. Download the `cetbuildtools-XX-noarch.tar.bz2` to your `localProducts...` directory with `wget` and unwind with `tar xf <.tar.bz2> file`. Now do your build environment setup again (e.g. `. mrb s`).  Do `ups active` to ensure that `cetbuildtools` comes from your local products area. You can remove the tar file now. 
+ If you use the `art` framework, you must make your own local release of `cetbuildtools`. That is because the `cetbuildtools` CMake macros perform a check that our scripts will violate. With your own version of `cetbuildtools`, you can circumvent the check. To get your own `cetbuildtools`, look at the version of cetbuildtools that you use (e.g. setup your environment to the point where you can do a build and look at `$CETBUILDTOOLS_DIR` and note the version). With your Mac web browser, go to https://scisoft.fnal.gov/scisoft/packages/cetbuildtools and find that version. Download the `cetbuildtools-XX-noarch.tar.bz2` to your `localProducts...` directory with `wget` and unwind with `tar xf <.tar.bz2> file`. Now do your build environment setup again (e.g. `. mrb s`).  Do `ups active` to ensure that `cetbuildtools` comes from your local products area. You can remove the tar file now. 
  
  You should also `setup gdb` and any other packages that aren't yet set up (rare).
  
@@ -60,7 +60,7 @@ unsetup cmake  # Do not use the UPS version
 export PATH=/path/to/CMake/directory/bin:$PATH  # Be sure first item ends in bin, not cmake
 ```
  
- Now, `cd` to your docker directory for this development area (where your `docker-compose.yml` file is located). Run a script from the devenv repository helpers directory,
+ Let's capture your enviornment to a file. Still in the container, `cd` to your docker directory for this development area (where your `docker-compose.yml` file is located). Run a script from the devenv repository helpers directory...
  
  ```shell script
 /path/to/devenv/helpers/make_env.sh > <ENV_NAME>.env
@@ -97,12 +97,12 @@ docker-compose up -d devenv-<NAME>
  ```
 and wait for CVMFS to start up (`docker-compose logs -f devenv-<NAME>`).
 
-For fun, `docker-compose exec` into a shell (see above). You'll see that your development is magically set up already! No need to source any scripts! This happens because we are passing in the list of environment variables and they are being set before you get the shell prompt. You can verify with `ups active`. Do `cmake --version` to make sure you have the correct `cmake`. Note that shell functions are **not** passed into the environment. That means that the UPS `setup` function (yes, it's a bash function, not a script) will not work. 
+For fun, `docker-compose exec` into a shell (see above). You'll see that your development environment is magically set up already! No need to source any scripts! This happens because we are passing in the list of environment variables and they are being set before you get the shell prompt. You can verify with `ups active`. Do `cmake --version` to make sure you have the correct `cmake`. Note that shell functions are **not** passed into the environment. That means that the UPS `setup` function (yes, it's a bash function, not a script) will not work. 
  If you need `setup` and/or `unsetup` restored, you can, within the container, `source /path/to/devenv/helpers/restore_ups_setup`. If you need an extra package for builds and such, then set it up, check `ups active` and redo the `make_env.sh` step above. Then exit the shell and restart the container. 
 
 ## Creating the helper scripts
 
-Our strategy will be to create a toolchain for `cmake`, compilers and `gdb` that will call our helper scripts that, in turn, will run the corresponding program in the container. CLion cannot do this for docker containers out of the box (a different JetBrains product, `PyCharm`, can for Python - maybe CLion will add this functionality one day). Since CMake will be calling these helper scripts, we are not able to add extra logic or arguments (e.g. we cannot write one helper script to rule them all). 
+Our strategy will be to create a toolchain for `cmake` and  compilers that will call our helper scripts that, in turn, will run the corresponding program in the container. CLion cannot do this for docker containers out of the box (a different JetBrains product, `PyCharm`, can for Python - maybe CLion will add this functionality one day). Since CMake will be calling these helper scripts, we are not able to add extra logic or arguments (e.g. we cannot write one helper script to rule them all). 
 
 To make the helper scripts, see and follow the instructions in `/path/to/devenv/helpers/runWithDockerExec-TEMPLATE`. 
 
@@ -144,7 +144,7 @@ You may notice that the name of your project is `srcs` (e.g. from the title of t
 cd /path/to/dev_area/srcs
 echo '<Project name>' > .idea/.name
 ```
-where `Project name` is the name you want for the project. The next time you start CLion, it will use that name for the project.
+where `<Project name>` is the name you want for the project. The next time you start CLion, it will use that name for the project.
 
 Now, let's fix the CMake problem. You should see a `CMake` window with the failure. To the left of that window are some icons. Click on the Settings icon (the gear wheel) and select "CMake settings". Change the "Generation path" to the build directory for your development area (e.g. for me it may be `/path/to/dev_area/build_slf6.x86_64`). 
 
@@ -154,7 +154,7 @@ Now, select `Toolchains` on the left. This will bring up the toolchains pane. Cl
 
 CLion will run some tests and give you the versions of CMake and gdb. Be sure these are correct (especially CMake). 
 
-Now, to back to the CMake settings (`CMake` on the left toolbar under Toolchains). Be sure the Generation Path is correct (you set that before) and, assuming you want to run `ninja` (yes, you do), add the following to `CMake options`:
+Now, to back to the CMake settings (`CMake` on the left toolbar under Toolchains). Select the new toolchain you just made. Be sure the Generation Path is correct (you set that before) and, assuming you want to run `ninja` (yes, you do), add the following to `CMake options`:
 ```
 -DCMAKE_MAKE_PROGRAM=ninja -Wno-dev -G Ninja
 ```
@@ -202,7 +202,7 @@ You may now build, run, and debug the program (see below for how to debug).
 
 ### Debugging
 
-To do debugging, we'll set up a Remote `gdbserver` in the container and then talk to it with `gdb` from the Mac. 
+To do debugging, we'll set up a remote `gdbserver` in the container and then talk to it with `gdb` from the Mac. 
 
 CLion comes with its own `gdb`, but I find that it does not work in that it cannot determine variable values. That's a big limitation. The `gdb` out of Homebrew works just fine. To install it on your Mac, assuming you have [Homebrew](https://brew.sh), do
 ```shell script
@@ -214,7 +214,7 @@ Now we need to make a new remote debug configuration. From the Run/Build Configu
 ```shell script
 localhost:7777
 ```
-The `docker-compose` file publishes port 7777. 
+The `docker-compose.yml` file says to publish port 7777 from the container to the Mac host. 
 
 That's all you need to fill out; click OK.
 
@@ -236,18 +236,18 @@ There are ways to use CLion to start the `gdbserver`, but that's beyond the scop
 
 Some random notes on how this system works and why some choices were made so I don't forget.
 
-The goal here is to allow **performant** and, at a slightly less priority, convenient use of CLion on the Mac for Linux development. Performance is the key. CLion has a remote development mode, but is uses `ssh` and it seems to call it a lot to get into the remote side for many tasks. CLion also wants to copy files between the remote and local sides. The fact that our development environment requires substantial initialization means that each `ssh` call incurs substantial overhead along with file movement. Performance suffers to the point that the system is unusable. 
+The goal here is to allow **performant** and, at a slightly less priority, convenient use of CLion on the Mac for Linux development. Performance is the key. CLion has a remote development mode, but is uses `ssh` and it seems to call it many, many times to get into the remote side for many tasks. CLion also wants to copy files between the remote and local sides. The fact that our development environment requires substantial initialization means that each `ssh` call incurs substantial overhead along with file movement. Performance suffers to the point that the system is unusable. 
 
 To mitigate these problems, the system here,
 * Uses docker for very performant linux access
 * Docker accesses the local filesystem in a performant way (nfs).
 * The "local" and "remote" paths are the same, so no file movement is necessary
-* docker-compose can store an environment and apply it to a container quickly, so overhead is very low
-* CVMFS, which incurs a very long mount time, can be done once for the container.
+* docker-compose can apply an environment to a container quickly, so overhead is very low
+* Mounting CVMFS, which can take a long time, can be done once for the container.
 
 ---
 
-CLion asks for the location of `cmake`, `make`, the C and C++ compilers, and `gdb` in the Toolchain preference pane. To make these applications run within a docker container, we need a helper script that go into the container, with the correct environment, at the correct directory, and run the program with the correct arguments. Since the `docker` call is the same for all of these programs, there is a script `runWithDockerExec` that does that work. It would be nice to have this one script and somehow pass in the program to run, but this needs to look like the programs themselves (from the Mac CLion point of view). So the way this works is that you cop this script to your working area, which some changes to bake in the location of the docker-compose.yml file and the service to talk do, and then make soft links to this script with the names of the needed programs (`cmake`, etc). The script can figure out the name of the program from `$0`.
+CLion asks for the location of `cmake`, `make`, the C and C++ compilers, and `gdb` in the Toolchain preference pane. To make these applications run within a docker container, we need a helper script that go into the container with the correct environment at the correct directory and run the program with the correct arguments. Since the `docker` call is the same for all of these programs, there is a script `runWithDockerExec` that does that work. It would be nice to have this one script and somehow pass in the program to run, but this needs to look like the programs themselves (from the Mac CLion point of view). So the way this works is that you copy this script to your working area, make some changes to bake in the location of the docker-compose.yml file and the service to talk do, and then make soft links to this script with the names of the needed programs (`cmake`, etc). The script can figure out the name of the program from `$0`.
 
 The locations of these soft links must then be filled into the toolchain pane. Despite `cmake` doing nearly all of the work of setting up the project, CLion goes in after `cmake` runs and determines dependencies by running the compiler directly on particular files. For some reason, it gets the location of the compiler from `cmake`, not the entries in the toolchain. I think this is the only time when CLion actually directly runs the compilers (not for building, since it just calls `cmake --build`).  Therefore, the compiler path that `cmake` knows must point to an application that the **Mac** can run. That is, you can't play a trick of overriding the compiler paths in cmake options to their linux paths (if you could do this, then you would not need to remove the compiler path check in `cetbuildtools`). The compiler paths must be to the helper soft links. The `runWithDockerExec` must be smart to know that if it is called from the Mac, it runs in the container. If it is called from Linux, then it just runs the program directly. 
 
