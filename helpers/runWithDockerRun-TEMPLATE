@@ -20,7 +20,7 @@
 command=$(basename "$0")
 
 if [[ $(uname -s) == Darwin ]]; then
-  docker-compose -f <PATH>/../docker-compose.yml run --rm -T -w "$PWD" devenv-client-<NAME> $command "$@"
+  docker-compose -f <PATH>/../docker-compose.yml run --rm -T --no-deps -w "$PWD" devenv-client-<NAME> $command "$@"
 else
   $command "$@"
 fi

@@ -45,6 +45,8 @@ We want to be able to run commands in the container quickly with a minimum of st
 * Incur the CVMFS mount time once and not per each command. We'll `docker-compose exec` into a container that already has CVMFS running. 
 * We'll store the development environment (environment variables) and use `docker-compose` to quickly reinstate it when we run a command in the container with `docker-compose exec`.    
 
+Note that for these instructions, we'll be running the long-lived container and using `docker-compose exec` to run commands within. This repository includes a script `runWithDockerExec` to make that happen. Alternatively, you could run the `cvmfs_nfs_server` long lived container and run commands in ephemeral containers with `docker-compose run`. There is a script `runWithDockerRun` to do that as well, but that will not be used in these instructions as we'll favor the `docker-compose exec` approach. You'll note that we'll use the `devenv-<NAME>` container where `<NAME>` is what you chose when you made the `docker-compose.yml` file. That container is the long lived one and we'll `docker-compose exec` into it to run things. 
+
 ### Capture your development environment to an `.env` file
  
  Prepare the `docker-compose.yml` file as per [README.md](README.md) and start the long lived `devenv-<NAME>` service (where `<NAME>` is the descriptive name you gave to identify the containers/service). For example `docker-compose up -d devenv-<NAME>`. Now, `docker-compose exec devenv-<NAME> /bin/bash` to start a shell in the container. Set up your development area and checkout source code. 

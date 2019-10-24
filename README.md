@@ -9,7 +9,7 @@ Linux style development, like what we do for particle physics experiments at Fer
 
 The differences that Mac and XCode introduce are difficult to manage and many experiments have stopped making Mac builds. Despite these problems, Mac laptops remain powerful machines and the MacOS environment is advantageous in many other areas. Therefore, mitigating the problems with Linux style development is motivated.
 
-This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using CLion for C++ development in this environment are given in the [CLion documentation here](clion.md).  
+This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using CLion for C++ development in this environment are given in the documentation for running CLion within the [linux container](clion-linux.md) or from the [Mac host](clion-mac.md).  
 
 Note that the containers and techniques here may also work on Windows. You will have to adapt these instructions for that platform. 
 
@@ -144,7 +144,7 @@ You are likely wanting to run the container for a development purpose. Make a di
 
 Now copy the `docker-compose.yml-TEMPLATE` file from this repository. You may either check out the repository or download the file directly from [here](https://github.com/lyon-fnal/devenv/tree/master/compose). 
 
-Follow the instructions in the comments and replace the parts of the template.  There are some notes to uncomment certain parts if you plan to use CLion (see [here](clion.md)). You can do that now or later after setting things up (again, see below).
+Follow the instructions in the comments and replace the parts of the template.  There are some notes to uncomment certain parts if you plan to use CLion for the Mac (see [here](clion-mac.md)). You can do that now or later after setting things up (again, see below).
 
 ### A note about `docker-compose`
 Docker compose works like `vagrant`. `docker-compose` commands will look in the current directory for the `docker-compose.yml` configuration file.  This can be quite convenient. If you would rather operate out of a different directory, you can always add the `-f FILE` option and give the location of the file. For example,
@@ -234,13 +234,13 @@ docker-compose run --rm devenv-client-<NAME> command
 docker-compose run --rm devenv-client-mydev mrb b
 ```
 
-The ephemeral containers will likely need some environment setup. The best way to do that is with an environmeent file. See the [CLion documeentation](clion.md) for how to do that. 
+The ephemeral containers will likely need some environment setup. The best way to do that is with an environment file. 
 
 ### Some notes
 
-This `docker-compose` configuration is not really set up to run containers from different development areas simultaneously. If you try this, you may need to change the host port numbers or use ephemeral ports. You should not run more than one `cvmfs_nfs_server` container as all such server containers share the same cache volume.  You can certainly change the compose file to suit your needs (e.g. remove services you'll never use).
+This `docker-compose` configuration template is not really set up to run containers from different development areas simultaneously. If you try this, you may need to change the host port numbers or use ephemeral ports to avoid conflicts. You should not run more than one `cvmfs_nfs_server` container as all such server containers share the same cache volume.  You can certainly change the compose file to suit your needs (e.g. remove services you'll never use).
 
-You may want to have one `docker-compose.yml` file for your entire development setup (e.g. not make one per development area). That would allow you to run more containers simultaneously with changes to the file. 
+You may want to have one `docker-compose.yml` file for your entire development setup (e.g. not make one per development area). That would allow you to run more containers simultaneously with changes to the file. Furthermore, all containers defined by one `docker-compose.yml` file are on the same "docker network", and therefore you can run one `cvmfs_nfs_server` container. If you have nfs client containers from *different* `docker-compose.yml` files, you will need to create a common docker network and specify that in the container configuration. One `docker-compose.yml` file eliminates that problem. 
 
 ### Connecting to the container with VNC
 
