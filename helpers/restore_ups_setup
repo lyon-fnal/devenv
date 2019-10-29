@@ -5,6 +5,10 @@ setup () {
  source `ups setup "$@"`
 }
 
-unsetup() {
+unsetup () {
   source `ups unsetup "$@"`
+}
+
+mrbsetenv () {
+    source ${MRB_DIR}/bin/mrbSetEnv
 }
