@@ -1,5 +1,5 @@
 # Source this script within the container to restore
-# UPS' setup and unsetup shell functions`
+# UPS' setup and unsetup shell functions
 
 setup () {
  source `ups setup "$@"`

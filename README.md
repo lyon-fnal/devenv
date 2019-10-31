@@ -1,10 +1,33 @@
 # devenv - A development environment for the Mac
 Adam L. Lyon, October 2019
 
+* [devenv \- A development environment for the Mac](#devenv---a-development-environment-for-the-mac)
+  * [Introduction](#introduction)
+  * [Details](#details)
+  * [Why Docker containers?](#why-docker-containers)
+  * [Installation](#installation)
+    * [Install and prepare Docker for Mac](#install-and-prepare-docker-for-mac)
+    * [Prepare NFS on your Mac](#prepare-nfs-on-your-mac)
+  * [The docker images](#the-docker-images)
+  * [Which image to use?](#which-image-to-use)
+    * [I still don't know which image to use](#i-still-dont-know-which-image-to-use)
+  * [Running the containers with docker\-compose](#running-the-containers-with-docker-compose)
+    * [Setting up docker\-compose](#setting-up-docker-compose)
+    * [A note about docker\-compose](#a-note-about-docker-compose)
+    * [Features of  docker\-compose\.yml file](#features-of--docker-composeyml-file)
+  * [Running](#running)
+    * [Run a long lived container](#run-a-long-lived-container)
+    * [Running ephemeral containers](#running-ephemeral-containers)
+    * [Some notes](#some-notes)
+    * [Connecting to the container with VNC](#connecting-to-the-container-with-vnc)
+  * [Doing stuff](#doing-stuff)
+    * [Examining container resource usage with netdata](#examining-container-resource-usage-with-netdata)
+    * [Running CLion](#running-clion)
+    
 ## Introduction
 Linux style development, like what we do for particle physics experiments at Fermilab, is becoming more difficult on the Mac. Apple is moving to its own style of development that is often incompatible. For example,
 * System Integrity Protection (SIP) prevents using `DYLD_LIBRARY_PATH`, breaking the mechanism used by our development environment system, `ups`.
-* Mac headers and system libraries are not always compatible with those on Linux, necessitating platform dependent code.
+* Mac headers and system libraries are not always compatible with those on Linux, necessitating platform dependent code. 
 * XCode is more focused on Swift, Objective-C, and Mac or iOS-style development. XCode does not understand CMake builds natively. 
 
 The differences that Mac and XCode introduce are difficult to manage and many experiments have stopped making Mac builds. Despite these problems, Mac laptops remain powerful machines and the MacOS environment is advantageous in many other areas. Therefore, mitigating the problems with Linux style development is motivated.
@@ -16,20 +39,18 @@ Note that the containers and techniques here may also work on Windows. You will 
 ## Details
 
 * For best performance, `/cvmfs` is mounted and managed from within the container (mounting the Mac's CVMFS within the container performs very poorly).
-* You will keep your development and code directories and files on your Mac file system. The container will need performant access to that filesystem. We will use `nfs` to do that. An advantage here is that you may be able to use nice Mac-based IDEs for development.  
+* You will keep your development and code directories and files on your Mac file system. The container will need performant access to that filesystem. We will use `nfs` (transparently to you) to do that. An advantage here is that you may be able to use nice Mac-based IDEs for development (e.g. see [CLion for the Mac](clion-mac.md)).  
 * You may use one of several different "styles" of use for the container
   * Run the container as a full service that hosts VNC and access like a Linux desktop. The container needs to be up and running during use. 
   * Run the container as a build/execution service for an IDE like CLion. In this case, the container needs to be up and running during use.
   * Run the container from the command line. In this case you can `docker run` various commands within the container.
   
-One difficulty is that most of our physics code requires a setup step before running or building, which may be time consuming. We will try a mitigation for CLion. 
-
 ## Why Docker containers?
 
 There are three ways to do Linux style development on the Mac
 
 1. Not do it - that is conform to the Mac development style. As discussed above, this solution is becoming too difficult and costly to maintain.
-1. Run a Linux virtual machine with [Virtual Box](https://www.virtualbox.org) and [vagrant](https://www.vagrantup.com). A Virtual Box Linux VM is a heavyweight virtualization solution that is complicated to set up and maintain. `vagrant` makes configuration and management easier though not simple. Virtual Box VMs are also difficult to distribute. One advantage here is that Mac IDEs that support remote development do so with `ssh`, which is the preferred way to interact with a VM. 
+1. Run a Linux virtual machine with [Virtual Box](https://www.virtualbox.org) and [vagrant](https://www.vagrantup.com). A Virtual Box Linux VM is a heavyweight virtualization solution that is complicated to set up and maintain. `vagrant` makes configuration and management easier though not simple. Virtual Box VMs are also difficult to distribute. One advantage here is that many Mac IDEs that support remote development do so with `ssh`, which is the preferred way to interact with a VM. 
 1. Run a Linux Docker Container. [Docker](https://www.docker.com) containers are lightweight virtualization solutions, relatively easy to set up and configure and are portable to other systems that run Docker or [Singularity](https://sylabs.io). A disadvantage is that running `ssh` in the container is not the "docker way", therefore integration with remote development capable IDEs is more difficult, but not impossible. 
 
 Another aspect is performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
@@ -42,7 +63,7 @@ These instructions will guide you through installing the containers and associat
 
 You need to install and configure `docker` on your Mac. Go to https://www.docker.com/products/docker-desktop and click on "Download Desktop for Mac and Windows". Then click on "Download Docker Desktop for Mac". If given a choice, choose the "stable" edition and not "edge". The latter is a preview version and I've found that to be unstable. You can then skip the rest of the tutorial on the web site. 
 
-Docker for Mac is a service that runs on your Mac all the time in order to support and run Docker containers. You should see a little "whale" icon in your menu bar. Click on that and select `Preferences`. I leave the main preferences page as the default. Select `File Sharing`. This screen shows what top level directories you want to share with docker containers. If you plan to run Clion (see below), then you need to add directories to make it look like the following,
+Docker for Mac is a service that runs on your Mac all the time in order to support and run Docker containers. You should see a little "whale" icon in your menu bar. Click on that and select `Preferences`. I leave the main preferences page as the default. Select `File Sharing`. This screen shows what top level directories you want to share with docker containers. If you plan to run CLion on the Mac as described [here](clion-mac.md), then you need to add directories to make it look like the following,
 
 ![File Sharing preferences](documentation/filesharing.png)
 
@@ -64,9 +85,9 @@ If you've made any changes, click on "Apply & Restart".
 
 Note that you can make your life easier with bash command completion. See [here](https://docs.docker.com/compose/completion/) for how to install that. Follow the Mac instructions. 
 
-### Prepare NFS
+### Prepare NFS on your Mac
 
-For the best performance, your `/Users` directory will be served into the docker container with `nfs`. I have found this technique to be the most performant way to access data on the Mac from the container. It is a little complicated to set up, so we'll do it only for the directory that matters - that is where all your code files exist in `/Users`. To do this, you need to follow these steps from a Mac terminal:
+For the best performance, your `/Users` directory will be served by your Mac into the docker container with `nfs`. I have found this technique to be the most performant way to access data on the Mac from the container. It is a little complicated to set up, so we'll do it only for the directory that matters - that is where all your code files exist in `/Users`. To do this, you need to follow these steps from a Mac terminal:
 
 First - determine your user and group id numbers. Record them somewhere. 
 ```bash
@@ -133,6 +154,10 @@ The usage pattern involving `devenv_cvmfs:sl6`, that is running it as a long-liv
 
 Finally `devenv_cvmfs_vnc:sl6` makes a long lived container that mounts CVMFS and then runs VNC, giving you a full linux desktop experience. This can be useful for running linux GUI applications. VNC tends to be **much** faster than running graphics applications from forwarded X windows. You can also run openGL applications in VNC (though docker does not have access to your GPU, so it will be software 3D rendering).
 
+
+### I still don't know which image to use
+
+Use `devenv_cvmfs:sl6` for a long lived container that mounts CVMFS itself. 
 
 ## Running the containers with `docker-compose`
 

@@ -1,6 +1,18 @@
 # CLion for Linux and the `devenv` containers
 
 Adam Lyon (October 2019)
+
+* [CLion for Linux and the devenv containers](#clion-for-linux-and-the-devenv-containers)
+  * [Introduction](#introduction)
+  * [Linux CLion within the container and VNC](#linux-clion-within-the-container-and-vnc)
+    * [Installing Linux CLion](#installing-linux-clion)
+    * [Preparing to run and configuring](#preparing-to-run-and-configuring)
+    * [Opening a project in Linux CLion](#opening-a-project-in-linux-clion)
+    * [Building with Linux CLion](#building-with-linux-clion)
+    * [Debugging](#debugging)
+  * [Summary for Linux CLion](#summary-for-linux-clion)
+
+  
 ## Introduction
 
 [CLion](https://www.jetbrains.com/clion/) is an excellent C++ Integrated Development Environment from [JetBrains](https://www.jetbrains.com). I find it indispensable for coding in C++. You can easily run CLion within the container with VNC, and instructions here will guide you through setting that up. However, you may be disappointed if you are used to the Mac experience (exceptionally clear fonts, Mac key shortcuts, full screen, etc). This document will guide you through a rather lengthy but working process to use CLion on the Mac to develop within the `devenv` Linux container. 
@@ -106,13 +118,10 @@ Debugging should work as expected. One complication is that STL variables (vecto
 
 Running CLion on the Mac and debugging *will* have the pretty printers.
 
-### Summary for Linux CLion
+## Summary for Linux CLion
 
-Using CLion on Linux with VNC is quite convenient and is an easy way to get started with CLion without a lot of up front effort. As mentioned, it doesn't look nor act like a Mac application. If that's disappointing to you, then read on for running CLion on the Mac. 
+Using CLion on Linux with VNC is quite convenient and is an easy way to get started with CLion without a lot of up front effort. As mentioned, it doesn't look nor act like a Mac application. If that's disappointing to you, then see [clion-mac.md](clion-mac.md) for running CLion on the Mac. 
 
-## Mac CLion
-
-This section and the remainder of the document will explain how to use CLion for the Mac to do development within a `devenv` container. 
 
 
 
