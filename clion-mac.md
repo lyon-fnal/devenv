@@ -215,7 +215,7 @@ After CMake finishes, CLion will gather symbol information and index the code (y
 
 ### Indexing never happens - now what?
 
-If you never see `Indexing` on the status bar, you cannot resolve any headers or symbols in the code, and there are a large number of red wavy lines underneath `#include` lines, thn your Mac CVMFS is likely not mounted. Quite CLion, mount CVMFS on your Mac, start CLion and re-run `cmake`. That should force indexing. 
+If you never see `Indexing` on the status bar, you cannot resolve any headers or symbols in the code, and there are a large number of red wavy lines underneath `#include` lines, then your Mac CVMFS is likely not mounted. Quit CLion, mount CVMFS on your Mac, start CLion and re-run `cmake`. That should force indexing. 
 
 ### Building with Mac CLion
 
