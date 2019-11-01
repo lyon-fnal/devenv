@@ -39,7 +39,7 @@ There are a couple of things you need to do on your Mac to make this system work
 First, set up the `devenv` containers as per the [README.md](README.md) file. 
 
 ### Install CVMFS
-Then, you must install CVMFS on your Mac and configure it to mount the same CVMFS repositories that you use in the `devenv` container. You must do this so CLion can find headers and source code in `/cvmfs`. Unfortunately, despite haivng a `cvmfs_nfs_server` container that can serve CVMFS via NFS, there seems to be no way to export that to the host Mac. There are two main reasons for this deficiency,
+Then, you must install CVMFS on your Mac and configure it to mount the same CVMFS repositories that you use in the `devenv` container. You must do this so CLion can find headers and source code in `/cvmfs`. Unfortunately, despite having a `cvmfs_nfs_server` container that can serve CVMFS via NFS, there seems to be no way to export that to the host Mac. There are two main reasons for this deficiency,
 
 * Docker for Mac does not expose the docker network to the Mac host. This is because docker actually runs a virtual machine behind the scenes and the Mac has no easy access to that.
 * You can forward one or more ports to the Mac host, but NFSv3 uses many ports that will conflict with NFS running on your Mac (in order to serve your `/Users` area to the container). NFSv4 offers mounting nfs volumes with only one port, and that would be ideal and even usable, but CVMFS does not seem to work with NFSv4. 
@@ -82,7 +82,7 @@ Note that for these instructions, we'll be running the long-lived container and 
  
  Prepare the `docker-compose.yml` file as per [README.md](README.md) and start the long lived `devenv-<NAME>` service (where `<NAME>` is the descriptive name you gave to identify the containers/service). For example `docker-compose up -d devenv-<NAME>`. Now, `docker-compose exec devenv-<NAME> /bin/bash` to start a shell in the container. Set up your development area and checkout source code. 
  
- If you use the `art` framework, you must make your own local release of `cetbuildtools`. That is because the `cetbuildtools` CMake macros perform a check that our scripts will violate. With your own version of `cetbuildtools`, you can circumvent the check. To get your own `cetbuildtools`, look at the version of cetbuildtools that you use (e.g. setup your environment to the point where you can do a build and look at `$CETBUILDTOOLS_DIR` and note the version). With your Mac web browser, go to https://scisoft.fnal.gov/scisoft/packages/cetbuildtools and find that version. Download the `cetbuildtools-XX-noarch.tar.bz2` to your `localProducts...` directory with `wget` and unwind with `tar xf <.tar.bz2> file`. Now do your build environment setup again (e.g. `. mrb s`).  Do `ups active` to ensure that `cetbuildtools` comes from your local products area. You can remove the tar file now. 
+ If you use the `art` framework, you must make your own local release of `cetbuildtools`. That is because the `cetbuildtools` CMake macros perform a check that our scripts will violate. With your own version of `cetbuildtools`, you can circumvent the check. To get your own `cetbuildtools`, look at the version of `cetbuildtools` that you use (e.g. setup your environment to the point where you can do a build and look at `$CETBUILDTOOLS_DIR` and note the version). With your Mac web browser, go to https://scisoft.fnal.gov/scisoft/packages/cetbuildtools and find that version. Download the `cetbuildtools-XX-noarch.tar.bz2` to your `localProducts...` directory with `wget` and unwind with `tar xf <.tar.bz2> file`. Now do your build environment setup again (e.g. `. mrb s`).  Do `ups active` to ensure that `cetbuildtools` comes from your local products area. You can remove the tar file now. 
  
  You should also `setup gdb` and any other packages that aren't yet set up (rare).
  
@@ -93,7 +93,7 @@ unsetup cmake  # Do not use the UPS version
 export PATH=/path/to/CMake/directory/bin:$PATH  # Be sure first item ends in bin, not cmake
 ```
  
- Let's capture your enviornment to a file. Still in the container, `cd` to your docker directory for this development area (where your `docker-compose.yml` file is located). Run a script from the devenv repository helpers directory...
+ Let's capture your environment to a file. Still in the container, `cd` to your docker directory for this development area (where your `docker-compose.yml` file is located). Run a script from the devenv repository helpers directory...
  
  ```shell script
 /path/to/devenv/helpers/make_env.sh > <ENV_NAME>.env

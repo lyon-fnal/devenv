@@ -4,7 +4,7 @@ Adam L. Lyon, October 2019
 * [devenv \- A development environment for the Mac](#devenv---a-development-environment-for-the-mac)
   * [Introduction](#introduction)
   * [Why Docker containers?](#why-docker-containers)
-  * [Assunmptions](#assunmptions)
+  * [Assumptions](#assumptions)
   * [Details](#details)
   * [Installation](#installation)
     * [Install and prepare Docker for Mac](#install-and-prepare-docker-for-mac)
@@ -47,7 +47,7 @@ There are three ways to do Linux style development on the Mac
 
 Another aspect is performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
 
-## Assunmptions
+## Assumptions
 
 Currently, it is assumed that you are working in Scientific Linux 6 (this is the OS that Muon g-2 and NOvA use) and you are accessing executables and libraries with the [CernVM Filesytem (CVMFS)](https://cernvm.cern.ch/portal/filesystem). CVMFS is an extremely efficient and flexible system for delivering up to date dependencies to your development environment. By caching only the files you actually use, your experiment's dependencies will have the smallest footprint on your system possible. CVMFS allows one docker image to be useful for many development projects. 
 
@@ -203,7 +203,7 @@ docker-compose --rm run  devenv-laserTest --entrypoint /bin/bash "-c runMyScript
 
 ### Features of  `docker-compose.yml` file
 
-The docker-compose configuration file defines several services. `<NAME>` is the name you chose, such as the development area nane
+The docker-compose configuration file defines several services. `<NAME>` is the name you chose, such as the development area name
 
 * `devenv-<NAME>`: Service makes a long lived container from the `lyonfnal/devenv_cvmfs:sl6` image that mounts CVMFS at launch.
 
