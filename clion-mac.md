@@ -24,7 +24,7 @@ Adam Lyon (October 2019)
     
 ## Introduction
 
-See the introduction in [CLion for Linux](clion-linux.md).
+See the introduction in [CLion for Linux](clion-linux.md#introduction) for why CLion is useful, more about its features, and where to find helpful information.  
 
 If you have not tried CLion before, you may want to start with [CLion for Linux](clion-linux.md) as configuring it is much easier than CLion for Mac. If you decide you like it, then come back here and do the instructions. If you do this, you should remove the CLion project files so that CLion for Mac won't get confused. You can do that with `rm -rf /path/to/devArea/srcs/.idea`. 
 

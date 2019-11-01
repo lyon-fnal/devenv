@@ -3,8 +3,9 @@ Adam L. Lyon, October 2019
 
 * [devenv \- A development environment for the Mac](#devenv---a-development-environment-for-the-mac)
   * [Introduction](#introduction)
-  * [Details](#details)
   * [Why Docker containers?](#why-docker-containers)
+  * [Assunmptions](#assunmptions)
+  * [Details](#details)
   * [Installation](#installation)
     * [Install and prepare Docker for Mac](#install-and-prepare-docker-for-mac)
     * [Prepare NFS on your Mac](#prepare-nfs-on-your-mac)
@@ -13,7 +14,7 @@ Adam L. Lyon, October 2019
     * [I still don't know which image to use](#i-still-dont-know-which-image-to-use)
   * [Running the containers with docker\-compose](#running-the-containers-with-docker-compose)
     * [Setting up docker\-compose](#setting-up-docker-compose)
-    * [A note about docker\-compose](#a-note-about-docker-compose)
+    * [Notes about docker\-compose](#notes-about-docker-compose)
     * [Features of  docker\-compose\.yml file](#features-of--docker-composeyml-file)
   * [Running](#running)
     * [Run a long lived container](#run-a-long-lived-container)
@@ -32,9 +33,23 @@ Linux style development, like what we do for particle physics experiments at Fer
 
 The differences that Mac and XCode introduce are difficult to manage and many experiments have stopped making Mac builds. Despite these problems, Mac laptops remain powerful machines and the MacOS environment is advantageous in many other areas. Therefore, mitigating the problems with Linux style development is motivated.
 
-This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using CLion for C++ development in this environment are given in the documentation for running CLion within the [linux container](clion-linux.md) or from the [Mac host](clion-mac.md).  
+This package contains a configuration for `docker` containers along with instructions for integrating with the Mac that make for an effective and efficient development platform for Linux style development of physics code. Instructions for using [CLion](https://www.jetbrains.com/clion/) for C++ development in this environment are given in the documentation for running CLion within the [linux container](clion-linux.md) or from the [Mac host](clion-mac.md).  
 
 Note that the containers and techniques here may also work on Windows. You will have to adapt these instructions for that platform. 
+
+## Why Docker containers?
+
+There are three ways to do Linux style development on the Mac
+
+1. Not do it (resistance is futile) - that is conform to the Mac development style. As discussed above, this solution is becoming too difficult and costly to maintain. The vast majority of scientific code development is targeted at Linux. The more the Mac diverges, the more difficult it is to maintain a pure Mac development environment. 
+1. Run a Linux virtual machine with [Virtual Box](https://www.virtualbox.org) and [vagrant](https://www.vagrantup.com). A Virtual Box Linux VM is a heavyweight virtualization solution that is complicated to set up and maintain. `vagrant` makes configuration and management easier though not simple. Virtual Box VMs are also difficult to distribute. One advantage here is that many Mac IDEs that support remote development do so with `ssh`, which is the preferred way to interact with a VM. 
+1. Run a Linux Docker Container. [Docker](https://www.docker.com) containers are lightweight virtualization solutions, relatively easy to set up and configure and are portable to other systems that run Docker or [Singularity](https://sylabs.io). A disadvantage is that running `ssh` in the container is not the "docker way", therefore integration with remote development capable IDEs is more difficult, but not impossible. 
+
+Another aspect is performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
+
+## Assunmptions
+
+Currently, it is assumed that you are working in Scientific Linux 6 (this is the OS that Muon g-2 and NOvA use) and you are accessing executables and libraries with the [CernVM Filesytem (CVMFS)](https://cernvm.cern.ch/portal/filesystem). CVMFS is an extremely efficient and flexible system for delivering up to date dependencies to your development environment. By caching only the files you actually use, your experiment's dependencies will have the smallest footprint on your system possible. CVMFS allows one docker image to be useful for many development projects. 
 
 ## Details
 
@@ -44,16 +59,6 @@ Note that the containers and techniques here may also work on Windows. You will 
   * Run the container as a full service that hosts VNC and access like a Linux desktop. The container needs to be up and running during use. 
   * Run the container as a build/execution service for an IDE like CLion. In this case, the container needs to be up and running during use.
   * Run the container from the command line. In this case you can `docker run` various commands within the container.
-  
-## Why Docker containers?
-
-There are three ways to do Linux style development on the Mac
-
-1. Not do it - that is conform to the Mac development style. As discussed above, this solution is becoming too difficult and costly to maintain.
-1. Run a Linux virtual machine with [Virtual Box](https://www.virtualbox.org) and [vagrant](https://www.vagrantup.com). A Virtual Box Linux VM is a heavyweight virtualization solution that is complicated to set up and maintain. `vagrant` makes configuration and management easier though not simple. Virtual Box VMs are also difficult to distribute. One advantage here is that many Mac IDEs that support remote development do so with `ssh`, which is the preferred way to interact with a VM. 
-1. Run a Linux Docker Container. [Docker](https://www.docker.com) containers are lightweight virtualization solutions, relatively easy to set up and configure and are portable to other systems that run Docker or [Singularity](https://sylabs.io). A disadvantage is that running `ssh` in the container is not the "docker way", therefore integration with remote development capable IDEs is more difficult, but not impossible. 
-
-Another aspect is performance. Many of the solutions have overhead that makes builds or development slow. The instructions here aim for the most performant system possible with docker. 
 
 ## Installation
 
@@ -171,13 +176,30 @@ Now copy the `docker-compose.yml-TEMPLATE` file from this repository. You may ei
 
 Follow the instructions in the comments and replace the parts of the template.  There are some notes to uncomment certain parts if you plan to use CLion for the Mac (see [here](clion-mac.md)). You can do that now or later after setting things up (again, see below).
 
-### A note about `docker-compose`
+### Notes about `docker-compose`
 Docker compose works like `vagrant`. `docker-compose` commands will look in the current directory for the `docker-compose.yml` configuration file.  This can be quite convenient. If you would rather operate out of a different directory, you can always add the `-f FILE` option and give the location of the file. For example,
 ```bash
 docker-compose -f ../docker/docker-compose.yml ...   # if you aren't in the directory with the docker-compose.yml file
 ```
 
 For the instructions below, we'll assume that you are in the directory with the `docker-compose.yml` file. 
+
+Also, you need to be a little careful about where you put options on the command line. In general, the form of a `docker-compose` command is,
+
+```bash
+docker-compose <COMMAND> <COMMAND-OPTIONS> <SERVICE> <SERVICE-OPTIONS>
+```
+
+For example, this works
+```bash
+docker-compose run --rm --entrypoint /bin/bash devenv-laserTest "-c runMyScript.sh"
+```
+
+The `--rm` and `--entrypoint` options are for the `run` docker-compose command. The `-c runMyScript.sh` option is passed to the container when it launches.  Moving those options around will fail. For example, this will not work...
+
+```bash
+docker-compose --rm run  devenv-laserTest --entrypoint /bin/bash "-c runMyScript.sh"  # FAILS
+```
 
 ### Features of  `docker-compose.yml` file
 
@@ -195,30 +217,30 @@ For each service, the `docker-compose.yml` file defines environment variables, m
 
 ## Running 
 
-Below are instructions for running the services in the `docker-compose.yml` file. Note that you may get an 
+Below are instructions for running the services in the `docker-compose.yml` file. In general, you will choose to run **either** the long lived container (CVMFS is launched by the container - simpler) or ephemeral containers (CVMFS is served by the `cvmfs_nfs_server` container - less simple).
 
 ### Run a long lived container
  
-The long lived services perform some action, like mount CVMFS and, perhaps, start VNC, and then wait to be killed. In general, you start the service with 
+The long lived services mount CVMFS and, perhaps, start VNC, and then wait to be killed. You will "exec" into the container to do work ("exec" will launch a command like `bash` in an already running container). In general, you start the service with 
 
 ```bash
 docker-compose up -d <SERVICE>
 ```
 
-For example,
+where `<SERVICE>` is the service you want to start. If you leave that off, all of the services in the file will be started, and you likely don't want that. 
+
+Here's an example,
 ```bash
 docker-compose up -d devenv-test
 ```
 
-where `<SERVICE>` is the service you want to start. If you leave that off, all of the services in the file will be started, and you likely don't want that.
-
-Many of the services take awhile to start. You can look at progess with
+Many of the services take awhile to start. You can look at progress with
 
 ```bash
 docker-compose logs -f <SERVICE>
 ```
  
-Type Ctrl-D to exit out. The service will continue run
+Type Ctrl-C to exit out of the log viewer. The service will continue run.
 
 To stop all services, do 
 ```bash
@@ -229,9 +251,9 @@ To get a bash shell prompt from an "up" service, use `docker-compose exec`. For 
 ```bash
 docker-compose exec <SERVICE> /bin/bash
 ``` 
-Exiting the shell does NOT stop the service. 
+Exiting from that shell does **NOT** stop the service. You can `docker-compose exec` again. 
 
-To start a service to the prompt without initializing (not typical),
+To start a service to the prompt **without** initializing (this is not typical and is used to debug the image),
 ```bash
 docker-compose run --rm --entrypoint /bin/bash <SERVICE>  # Not typical to run this way
 ``` 
@@ -241,7 +263,7 @@ The startup script will not run, and so CVMFS will not be mounted and VNC (if ap
 
 The ephemeral containers are those run by the `devenv-client-<NAME>` service that makes containers from the `devenv_cvmfs_nfsclient:sl6` image. These containers launch very quickly, mount CVMFS from nfs (very fast), run a command, and exit. 
 
-Before you launch such containers, the `cvmfs-nfs-server` container must be running. Start it with
+Before you launch such containers, the `cvmfs-nfs-server` container must be running, since it serves CVMFS to the ephemeral client containers. Start it with
 
 ```bash
 docker-compose up -d cvmfs-nfs-server
@@ -251,7 +273,7 @@ docker-compsoe logs -f cvmfs-nfs-server  # Wait for startup
 docker-compose down
 ```
 
-You can then run the ephemeral containers with 
+You can then run the ephemeral client containers with 
 ```bash
 docker-compose run --rm devenv-client-<NAME> command
 
@@ -259,13 +281,13 @@ docker-compose run --rm devenv-client-<NAME> command
 docker-compose run --rm devenv-client-mydev mrb b
 ```
 
-The ephemeral containers will likely need some environment setup. The best way to do that is with an environment file. 
+The ephemeral containers will likely need some environment setup. The best way to do that is with an environment file. See the appropriate section in the [CLion for Mac](clion-mac.md#capture-your-development-environment-to-an-env-file) instructions for an example. 
 
 ### Some notes
 
 This `docker-compose` configuration template is not really set up to run containers from different development areas simultaneously. If you try this, you may need to change the host port numbers or use ephemeral ports to avoid conflicts. You should not run more than one `cvmfs_nfs_server` container as all such server containers share the same cache volume.  You can certainly change the compose file to suit your needs (e.g. remove services you'll never use).
 
-You may want to have one `docker-compose.yml` file for your entire development setup (e.g. not make one per development area). That would allow you to run more containers simultaneously with changes to the file. Furthermore, all containers defined by one `docker-compose.yml` file are on the same "docker network", and therefore you can run one `cvmfs_nfs_server` container. If you have nfs client containers from *different* `docker-compose.yml` files, you will need to create a common docker network and specify that in the container configuration. One `docker-compose.yml` file eliminates that problem. 
+You may want to have one `docker-compose.yml` file for your entire development setup (e.g. not make one per development area). That would allow you to run more containers simultaneously with changes to the file. Furthermore, all containers defined by one `docker-compose.yml` file are on the same "docker network", and therefore you can run one `cvmfs_nfs_server` container. If you have nfs client containers from *different* `docker-compose.yml` files, you will need to create a common docker network and specify that in the container configuration. One `docker-compose.yml` file eliminates that problem. This use case is beyond the scope of this document, but open an issue for help. 
 
 ### Connecting to the container with VNC
 
