@@ -12,6 +12,8 @@
 
 # This will remove the dangerous elements.
 
+TMPFILE=`mktemp`
+
 printenv | sort | \
 sed -e '/^HOME=/d' \
     -e '/^HOSTNAME=/d' \
@@ -21,4 +23,8 @@ sed -e '/^HOME=/d' \
     -e '/^PWD=/d' \
     -e '/^\_=/d' \
     -e '/^USER=/d' \
-    -e '/^TERM=/d'
+    -e '/^TERM=/d' > $TMPFILE
+
+# Copy LD_LIBRARY_PATH to HOLD_LD_LIBRARY_PATH in case something clobbers LD_LIBRARY_PATH
+sed -E 's%^LD_LIBRARY_PATH=(.*)%LD_LIBRARY_PATH=\1\'$'\n''HOLD_LD_LIBRARY_PATH=\1%' $TMPFILE
+
