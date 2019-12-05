@@ -6,7 +6,7 @@
 #   Your release
 #   Your development area
 #   Special cetbuildtools
-#   gdb
+#   gdb if necessary
 
 # Usage: make_env.sh > build.env
 
@@ -26,5 +26,9 @@ sed -e '/^HOME=/d' \
     -e '/^TERM=/d' > $TMPFILE
 
 # Copy LD_LIBRARY_PATH to HOLD_LD_LIBRARY_PATH in case something clobbers LD_LIBRARY_PATH
-sed -E 's%^LD_LIBRARY_PATH=(.*)%LD_LIBRARY_PATH=\1\'$'\n''HOLD_LD_LIBRARY_PATH=\1%' $TMPFILE
+# and do the same for PYTHONPATH and PATH
+sed -i -E 's%^LD_LIBRARY_PATH=(.*)%LD_LIBRARY_PATH=\1\'$'\n''HOLD_LD_LIBRARY_PATH=\1%' $TMPFILE
+sed -i -E 's%^PYTHONPATH=(.*)%PYTHONPATH=\1\'$'\n''HOLD_PYTHONPATH=\1%' $TMPFILE
+sed -i -E 's%^PATH=(.*)%PATH=\1\'$'\n''HOLD_PATH=\1%' $TMPFILE
+cat $TMPFILE
 

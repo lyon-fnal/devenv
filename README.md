@@ -219,6 +219,8 @@ For each service, the `docker-compose.yml` file defines environment variables, m
 
 Below are instructions for running the services in the `docker-compose.yml` file. In general, you will choose to run **either** the long lived container (CVMFS is launched by the container - simpler) or ephemeral containers (CVMFS is served by the `cvmfs_nfs_server` container - less simple).
 
+NOTE: The first time you try to run, you may encounter errors complaining that volumes do not exist. These errors are true - follow the instructions provided in the error message for creating the volumes. This may happen more than once - do it for each missing volume to create them all. Once you do this, you do not need to do it again.  
+
 ### Run a long lived container
  
 The long lived services mount CVMFS and, perhaps, start VNC, and then wait to be killed. You will "exec" into the container to do work ("exec" will launch a command like `bash` in an already running container). In general, you start the service with 
