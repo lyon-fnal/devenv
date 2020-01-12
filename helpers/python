@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# This script should be used as the python executable by PyCharm when using a docker-container remote python
+#   It needs to be called "python" so PyCharm will recognize it
+
+## When PyCharm runs python, it overrides our EntryPoint with their own. So we need to run ours
+##   But don't run if CVMFS is already mounted
+if [ ! -d /cvmfs/config-osg.opensciencegrid.org/etc ]; then
+  /usr/local/bin/docker-entrypoint.sh
+fi
+
+## For some reason, PyCharm clobbers PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$HOLD_PYTHONPATH
+
+# Now run the actual Python
+python "$@"
