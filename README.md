@@ -209,7 +209,7 @@ The docker-compose configuration file defines several services. `<NAME>` is the 
 
 * `devenv-vnc-<NAME>`: Service makes a long lived container from the `lyonfnal/devenv_cvmfs_vnc:sl6` image that mounts CVMFS and runs VNC.
 
-* `cvmfs_nfs_server`: Service makes a long lived container from the `lyonfnal/devenv-cvmfs-nfsserver:sl6` image that mounts CVMFS and serves it via nfs for the client container (next).
+* `cvmfs_nfs_server`: Service makes a long lived container from the `lyonfnal/devenv-cvmfs-nfsserver:sl6` image that mounts CVMFS and serves it via nfs for the client container (next). [Sorry that the underscores vs. dashes makes this confusing.]
 
 * `devenv-client-<NAME>`: Service makes a container from the `lyonfnal/devenv-cvmfs-nfsclient:sl6`. The container will launch very quickly and will exit when the command completes. It is not long lived. 
 
@@ -265,11 +265,11 @@ The startup script will not run, and so CVMFS will not be mounted and VNC (if ap
 
 The ephemeral containers are those run by the `devenv-client-<NAME>` service that makes containers from the `devenv_cvmfs_nfsclient:sl6` image. These containers launch very quickly, mount CVMFS from nfs (very fast), run a command, and exit. 
 
-Before you launch such containers, the `cvmfs-nfs-server` container must be running, since it serves CVMFS to the ephemeral client containers. Start it with
+Before you launch such containers, the `cvmfs_nfs_server` container must be running, since it serves CVMFS to the ephemeral client containers. Start it with
 
 ```bash
-docker-compose up -d cvmfs-nfs-server
-docker-compsoe logs -f cvmfs-nfs-server  # Wait for startup
+docker-compose up -d cvmfs_nfs_server
+docker-compsoe logs -f cvmfs_nfs_server  # Wait for startup
 
 # Stop the service much later
 docker-compose down
