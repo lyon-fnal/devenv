@@ -113,13 +113,13 @@ services:
     <<: *default-worker
     <<: *default-volumes-cvmfs
 
-  # cvmfs_nfs_server  -- Mounts and serves CVMFS to other containers via NFS
+  # cvmfs-nfs-server  -- Mounts and serves CVMFS to other containers via NFS
   # There is no way to expose the nfs server to the mac host. This is a limitation of docker for mac.
   #   The mac does not have direct access to the container's network and therefore cannot treat the container
   #   as a different machine. CVMFS also does not seem to support nfs4
-  cvmfs_nfs_server:
+  cvmfs-nfs-server:
     image: lyonfnal/devenv_cvmfs_nfsserver:sl6
-    hostname: cvmfs_nfs_server
+    hostname: cvmfs-nfs-server
     privileged: true
     <<: *default-environment
     volumes:
@@ -131,7 +131,7 @@ services:
     image: lyonfnal/devenv_cvmfs_nfsclient:sl6
     hostname: devenv-client-<NAME>
     depends_on:
-      - cvmfs_nfs_server
+      - cvmfs-nfs-server
     <<: *default-worker
     <<: *default-volumes-nocvmfs
 
