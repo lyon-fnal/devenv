@@ -1,29 +1,29 @@
 # devenv - A development environment for the Mac
 Adam L. Lyon, October 2019
 
-* [devenv \- A development environment for the Mac](#devenv---a-development-environment-for-the-mac)
-  * [Introduction](#introduction)
-  * [Why Docker containers?](#why-docker-containers)
-  * [Assumptions](#assumptions)
-  * [Details](#details)
-  * [Installation](#installation)
-    * [Install and prepare Docker for Mac](#install-and-prepare-docker-for-mac)
-    * [Prepare NFS on your Mac](#prepare-nfs-on-your-mac)
-  * [The docker images](#the-docker-images)
-  * [Which image to use?](#which-image-to-use)
-    * [I still don't know which image to use](#i-still-dont-know-which-image-to-use)
-  * [Running the containers with docker\-compose](#running-the-containers-with-docker-compose)
-    * [Setting up docker\-compose](#setting-up-docker-compose)
-    * [Notes about docker\-compose](#notes-about-docker-compose)
-    * [Features of  docker\-compose\.yml file](#features-of--docker-composeyml-file)
-  * [Running](#running)
-    * [Run a long lived container](#run-a-long-lived-container)
-    * [Running ephemeral containers](#running-ephemeral-containers)
-    * [Some notes](#some-notes)
-    * [Connecting to the container with VNC](#connecting-to-the-container-with-vnc)
-  * [Doing stuff](#doing-stuff)
-    * [Examining container resource usage with netdata](#examining-container-resource-usage-with-netdata)
-    * [Running CLion](#running-clion)
+- [devenv - A development environment for the Mac](#devenv---a-development-environment-for-the-mac)
+  - [Introduction](#introduction)
+  - [Why Docker containers?](#why-docker-containers)
+  - [Assumptions](#assumptions)
+  - [Details](#details)
+  - [Installation](#installation)
+    - [Install and prepare Docker for Mac](#install-and-prepare-docker-for-mac)
+    - [Prepare NFS on your Mac](#prepare-nfs-on-your-mac)
+  - [The docker images](#the-docker-images)
+  - [Which image to use?](#which-image-to-use)
+    - [I still don't know which image to use](#i-still-dont-know-which-image-to-use)
+  - [Running the containers with `docker-compose`](#running-the-containers-with-docker-compose)
+    - [Setting up `docker-compose`](#setting-up-docker-compose)
+    - [Notes about `docker-compose`](#notes-about-docker-compose)
+    - [Features of  `docker-compose.yml` file](#features-of-docker-composeyml-file)
+  - [Running](#running)
+    - [Run a long lived container](#run-a-long-lived-container)
+    - [Running ephemeral containers](#running-ephemeral-containers)
+    - [Some notes](#some-notes)
+    - [Connecting to the container with VNC](#connecting-to-the-container-with-vnc)
+  - [Doing stuff](#doing-stuff)
+    - [Examining container resource usage with `netdata`](#examining-container-resource-usage-with-netdata)
+    - [Running CLion](#running-clion)
     
 ## Introduction
 Linux style development, like what we do for particle physics experiments at Fermilab, is becoming more difficult on the Mac. Apple is moving to its own style of development that is often incompatible. For example,
@@ -100,10 +100,10 @@ id -u  # User ID
 id -g  # Group ID
 ```
 
-Now, edit the `/etc/exports` file with `sudo emacs -nw /etc/exports` from the Mac terminal. You may need to enter your password for the `sudo` to work. Add a line like the following...
+Now, edit the `/etc/exports` file with `sudo emacs -nw /etc/exports` from the Mac terminal. You may need to enter your password for the `sudo` to work. Add a line like the following (note that if you've upgraded to MacOS Catalina, you'll need to change to the below and restart `nfsd`)...
 
  ```
-/Users -alldirs -mapall=502:20 -no_subtree_check -async localhost
+/System/Volumes/Data -alldirs -mapall=502:20 -no_subtree_check -async localhost
 ```
  
  Be sure to replace the `502` with your user ID and the `20` with your group ID. Note that the `localhost` means your files will not be exported outside of your laptop, so this is safe. Save with `Ctrl-x Ctrl-c`. 
@@ -132,6 +132,8 @@ sudo nfsd restart
 Finally, restart docker. Click on the whale symbol in the menu bar and select `Restart` from the menu. 
 
 You can learn more about this configuration at this [blog post](https://medium.com/@sean.handley/how-to-set-up-docker-for-mac-with-native-nfs-145151458adc). 
+
+For Catalina information, including gaining access to your `Documents` directory, if that's necessary. See [here](https://www.firehydrant.io/blog/nfs-with-docker-on-macos-catalina/).
 
 ## The docker images
 
