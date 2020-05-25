@@ -1,29 +1,28 @@
-# CLion for the Mac and the `devenv` containers
+<span style="font-size:3em;">CLion for the Mac and the `devenv` containers</span>
 
 Adam Lyon (October 2019)
 
-* [CLion for the Mac and the devenv containers](#clion-for-the-mac-and-the-devenv-containers)
-  * [Introduction](#introduction)
-  * [Preparing your Mac](#preparing-your-mac)
-    * [Install CVMFS](#install-cvmfs)
-    * [Perhaps install a late version  Linux CMake](#perhaps-install-a-late-version--linux-cmake)
-  * [Installing CLion](#installing-clion)
-  * [Cloning this repository](#cloning-this-repository)
-  * [Preparing your development area and docker\-compose](#preparing-your-development-area-and-docker-compose)
-    * [Capture your development environment to an \.env file](#capture-your-development-environment-to-an-env-file)
-    * [Changes to docker\-compose\.yml](#changes-to-docker-composeyml)
-  * [Creating the helper scripts](#creating-the-helper-scripts)
-  * [Running CLion](#running-clion)
-    * [Open the project](#open-the-project)
-    * [Indexing never happens \- now what?](#indexing-never-happens---now-what)
-    * [Building with Mac CLion](#building-with-mac-clion)
-    * [Debugging](#debugging)
-  * [What if there's a new release or I need to change my development environment](#what-if-theres-a-new-release-or-i-need-to-change-my-development-environment)
-  * [Appendix](#appendix)
-    * [How the CMake in docker setup works](#how-the-cmake-in-docker-setup-works)
-    * [Workaround for error like "version \`CXXABI\_1\.3\.8' not found"](#workaround-for-error-like-version-cxxabi_138-not-found)
+- [1. Introduction](#1-introduction)
+- [2. Preparing your Mac](#2-preparing-your-mac)
+  - [2.1. Install CVMFS](#21-install-cvmfs)
+  - [2.2. Perhaps install a late version  Linux CMake](#22-perhaps-install-a-late-version-linux-cmake)
+- [3. Installing CLion](#3-installing-clion)
+- [4. Cloning this repository](#4-cloning-this-repository)
+- [5. Preparing your development area and `docker-compose`](#5-preparing-your-development-area-and-docker-compose)
+  - [5.1. Capture your development environment to an `.env` file](#51-capture-your-development-environment-to-an-env-file)
+  - [5.2. Changes to `docker-compose.yml`](#52-changes-to-docker-composeyml)
+- [6. Creating the helper scripts](#6-creating-the-helper-scripts)
+- [7. Running CLion](#7-running-clion)
+  - [7.1. Open the project](#71-open-the-project)
+  - [7.2. Indexing never happens - now what?](#72-indexing-never-happens---now-what)
+  - [7.3. Building with Mac CLion](#73-building-with-mac-clion)
+  - [7.4. Debugging](#74-debugging)
+- [8. What if there's a new release or I need to change my development environment](#8-what-if-theres-a-new-release-or-i-need-to-change-my-development-environment)
+- [9. Appendix](#9-appendix)
+  - [9.1. How the CMake in docker setup works](#91-how-the-cmake-in-docker-setup-works)
+  - [9.2. Workaround for error like "version `CXXABI_1.3.8' not found"](#92-workaround-for-error-like-version-cxxabi_138-not-found)
     
-## Introduction
+# 1. Introduction
 
 See the introduction in [CLion for Linux](clion-linux.md#introduction) for why CLion is useful, more about its features, and where to find helpful information.  
 
@@ -33,13 +32,13 @@ This document will guide you through using CLion on your Mac for building, runni
 
 The advantages of running CLion for the Mac are clear when you start it. The fonts are exceptionally clear, the keyboard shortcuts are familiar, and some things even work better like debugging. 
 
-## Preparing your Mac
+# 2. Preparing your Mac
 
 There are a couple of things you need to do on your Mac to make this system work. 
 
 First, set up the `devenv` containers as per the [README.md](README.md) file. 
 
-### Install CVMFS
+## 2.1. Install CVMFS
 Then, you must install CVMFS on your Mac and configure it to mount the same CVMFS repositories that you use in the `devenv` container. You must do this so CLion can find headers and source code in `/cvmfs`. Unfortunately, despite having a `cvmfs_nfs_server` container that can serve CVMFS via NFS, there seems to be no way to export that to the host Mac. There are two main reasons for this deficiency,
 
 * Docker for Mac does not expose the docker network to the Mac host. This is because docker actually runs a virtual machine behind the scenes and the Mac has no easy access to that.
@@ -55,20 +54,20 @@ Mount the CVMFS directories with, for example, ...
 sudo mount -t cvmfs gm2.opensciencegrid.org /cvmfs/gm2.opensciencegrid.org  # example
 ```
 
-### Perhaps install a late version  Linux CMake
+## 2.2. Perhaps install a late version  Linux CMake
 If you want to do builds with `ninja` (yes, you do) instead of `make`, then you'll need a late version of CMake. To do builds with ninja, CLion requires CMake v3.15 or later - that's likely much later than what you use in your release and what is on SciSoft. Choose an area on your Mac (I do `/Users/lyon/Development/CMake`) and [download](https://cmake.org/download/) the **linux** (not Mac) CMake `.tar.gz` file (I did v3.15.4). `tar xf` the tar file to unwind it. 
 
-## Installing CLion
+# 3. Installing CLion
 
  Be sure that the necessary CVMFS directories are mounted on your Mac. 
 
  Install CLion for the Mac from [here](https://www.jetbrains.com/clion/download/#section=mac) or [here](https://www.jetbrains.com/clion/nextversion/) for EAP builds (early access program). I generally install the EAP because they have new features that I want, though they sometimes have problems. 
  
-## Cloning this repository
+# 4. Cloning this repository
 
 We will be using some scripts in the `helpers` directory of this Github repository. You should `git clone` the repository to somewhere accessible from the container (e.g. under `/Users/<USER>/...`). 
  
-## Preparing your development area and `docker-compose`
+# 5. Preparing your development area and `docker-compose`
 
 We want to be able to run commands in the container quickly with a minimum of startup time. We can do two things to make that happen...
 
@@ -77,7 +76,7 @@ We want to be able to run commands in the container quickly with a minimum of st
 
 Note that for these instructions, we'll be running the long-lived container and using `docker-compose exec` to run commands within. This repository includes a script `runWithDockerExec` to make that happen. Alternatively, you could run the `cvmfs_nfs_server` long lived container and run commands in ephemeral containers with `docker-compose run`. There is a script `runWithDockerRun` to do that as well, but that will not be used in these instructions as we'll favor the `docker-compose exec` approach. You'll note that we'll use the `devenv-<NAME>` container where `<NAME>` is what you chose when you made the `docker-compose.yml` file. That container is the long lived one and we'll `docker-compose exec` into it to run things. 
 
-### Capture your development environment to an `.env` file
+## 5.1. Capture your development environment to an `.env` file
 
  This step is extremely important. It allows containers to start quickly with your development environment already in place. 
  
@@ -106,7 +105,7 @@ If you look at that file, you'll see it contains all (nearly all) of the environ
 
 IMPORTANT: Now, exit from the shell and bring down the container with `docker-compose down`.
 
-### Changes to `docker-compose.yml`
+## 5.2. Changes to `docker-compose.yml`
 
 Now, on the Mac with an editor, edit the `docker-compose.yml` for your development area. First, uncomment the two lines under `x-env-file: &default-env-file` to read,
 
@@ -134,7 +133,7 @@ and wait for CVMFS to start up (`docker-compose logs -f devenv-<NAME>`).
 For fun, `docker-compose exec` into a shell (see above). You'll see that your development environment is magically set up already! No need to source any scripts! This happens because we are passing in the list of environment variables and they are being set before you get the shell prompt. You can verify with `ups active`. Do `cmake --version` to make sure you have the correct `cmake`. Note that shell functions are **not** passed into the environment. That means that the UPS `setup` function (yes, it's a bash function, not a script) will not work. 
  If you need `setup` and/or `unsetup` restored, you can, within the container, `source /path/to/devenv/helpers/restore_ups_setup`. If you need an extra package for builds and such, then set it up, check `ups active` and redo the `make_env.sh` step above. Then exit the shell and restart the container. 
 
-## Creating the helper scripts
+# 6. Creating the helper scripts
 
 Our strategy will be to create a toolchain for `cmake` and  compilers that will call our helper scripts that, in turn, will run the corresponding program in the container. CLion cannot do this for docker containers out of the box (a different JetBrains product, `PyCharm`, can for Python - maybe CLion will add this functionality one day). Since CMake will be calling these helper scripts, we are not able to add extra logic or arguments (e.g. we cannot write one helper script to rule them all). 
 
@@ -158,7 +157,7 @@ We will use the `cmake`, `g++`, and `gcc` soft links for running those commands 
 ./<EXP> --version
 ```
 
-## Running CLion
+# 7. Running CLion
 
 Be sure your `devenv-<NAME>` container is up and running and CVMFS mounted (check the container log). 
 
@@ -166,7 +165,7 @@ Be sure that the necessary CVMFS directories are mounted on your Mac. You will n
 
 Start the CLion Mac application. If this is the first time you are running CLion, you will need to do some configuration. Just follow all the steps. When it asks you for a toolchain, leave the defaults as they are and continue. 
 
-### Open the project
+## 7.1. Open the project
 
 If you've used CLion before, it will open the previously used project. If that's not what you want, select the menu option `File -> Close Project`.
 
@@ -214,11 +213,11 @@ And now CMake should run to completion! You may see some warnings and you may ig
 
 After CMake finishes, CLion will gather symbol information and index the code (you'll see an indication of this in the status bar at the bottom of the CLion window). This may take a long time and some functionality is limited while this is happening. It only takes a long time the first time it indexes. 
 
-### Indexing never happens - now what?
+## 7.2. Indexing never happens - now what?
 
 If you never see `Indexing` on the status bar, you cannot resolve any headers or symbols in the code, and there are a large number of red wavy lines underneath `#include` lines, then your Mac CVMFS is likely not mounted. Quit CLion, mount CVMFS on your Mac, start CLion and re-run `cmake`. That should force indexing. 
 
-### Building with Mac CLion
+## 7.3. Building with Mac CLion
 
 In the upper toolbar, you should see the Run/Build configuration box. See the figure with the button explanations. 
 
@@ -240,7 +239,7 @@ Optional - set up to run a FCL file:
 
 You may now build, run, and debug the program (see below for how to debug). 
 
-### Debugging
+## 7.4. Debugging
 
 To do debugging, we'll set up a remote `gdbserver` in the container and then talk to it with `gdb` from the Mac. 
 
@@ -270,7 +269,7 @@ You should be able to do a full debug with all the features as if you are local.
 
 There are ways to use CLion to start the `gdbserver`, but that's beyond the scope of this document. 
 
-## What if there's a new release or I need to change my development environment 
+# 8. What if there's a new release or I need to change my development environment 
 
 If you need to update your development environment to use a new release or add a package, then it is best to start from an empty environment and re-establish it with UPS with the necessary changes. First, stop the containers with `docker-compose down`. Then, edit the `docker-compose.yml` file and re-comment the last line of the block with `x-worker`. That is,
 ```
@@ -279,9 +278,9 @@ If you need to update your development environment to use a new release or add a
 
 Now, follow the instructions again in [Capture your development environment to an \.env file](#capture-your-development-environment-to-an-env-file), setting up the environment from scratch with the changes you want. Be sure to uncomment the line above in the `docker-compose.yml` file when finished. 
 
-## Appendix
+# 9. Appendix
 
-### How the CMake in docker setup works
+## 9.1. How the CMake in docker setup works
 
 Some random notes on how this system works and why some choices were made so I don't forget.
 
@@ -306,7 +305,7 @@ Just to make this clear...
 1. cmake on linux uses those compiler paths to prepare the project.
 1. Once cmake is done, CLion on the Mac calls the compilers directly to determine dependencies. It does not get the paths to the compilers from the toolchain, but rather from `cmake` itself. Therefore, those paths that were passed into cmake must point to scripts that the Mac can run as well as Linux.
 
-### Workaround for error like "version `CXXABI_1.3.8' not found"
+## 9.2. Workaround for error like "version `CXXABI_1.3.8' not found"
 
 If you run in the linux desktop from the VNC container and the environment comes from an `.env` file (generated by `make_env` - see [Capture your development environment to an \.env file](#capture-your-development-environment-to-an-env-file)), then you may see an error when you run `root` or other code like,
 
@@ -320,8 +319,3 @@ This happens because, for some reason, the desktop environment clobbers the `LD_
 export LD_LIBRARY_PATH=$HOLD_LD_LIBRARY_PATH 
 ```
 After that, commands in that terminal session like `root` should work correctly. 
-
-
-
-
-`

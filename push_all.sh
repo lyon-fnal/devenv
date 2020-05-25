@@ -8,3 +8,6 @@ docker push lyonfnal/devenv_cvmfs:sl6
 docker push lyonfnal/devenv_cvmfs_vnc:sl6
 docker push lyonfnal/devenv_cvmfs_nfsserver:sl6
 docker push lyonfnal/devenv_cvmfs_nfsclient:sl6
+
+docker push lyonfnal/devenv:sl7
+docker push lyonfnal/devenv_cvmfs:sl7

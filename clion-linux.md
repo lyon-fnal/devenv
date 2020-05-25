@@ -1,19 +1,17 @@
-# CLion for Linux and the `devenv` containers
+<span style="font-size:3em;">CLion for Linux and the `devenv` containers</span>
 
 Adam Lyon (October 2019)
 
-* [CLion for Linux and the devenv containers](#clion-for-linux-and-the-devenv-containers)
-  * [Introduction](#introduction)
-  * [Linux CLion within the container and VNC](#linux-clion-within-the-container-and-vnc)
-    * [Installing Linux CLion](#installing-linux-clion)
-    * [Preparing to run and configuring](#preparing-to-run-and-configuring)
-    * [Opening a project in Linux CLion](#opening-a-project-in-linux-clion)
-    * [Building with Linux CLion](#building-with-linux-clion)
-    * [Debugging](#debugging)
-  * [Summary for Linux CLion](#summary-for-linux-clion)
-
+- [1. Introduction](#1-introduction)
+- [2. Linux CLion within the container and VNC](#2-linux-clion-within-the-container-and-vnc)
+- [3. Installing Linux CLion](#3-installing-linux-clion)
+- [4. Preparing to run and configuring](#4-preparing-to-run-and-configuring)
+- [5. Opening a project in Linux CLion](#5-opening-a-project-in-linux-clion)
+- [6. Building with Linux CLion](#6-building-with-linux-clion)
+- [7. Debugging](#7-debugging)
+- [8. Summary for Linux CLion](#8-summary-for-linux-clion)
   
-## Introduction
+# 1. Introduction
 
 [CLion](https://www.jetbrains.com/clion/) is an excellent C++ Integrated Development Environment from [JetBrains](https://www.jetbrains.com). I find it indispensable for coding in C++. You can easily run CLion within the container with VNC, and instructions here will guide you through setting that up. However, you may be disappointed if you are used to the Mac experience (exceptionally clear fonts, Mac key shortcuts, full screen, etc). This document will guide you through a rather lengthy but working process to use CLion on the Mac to develop within the `devenv` Linux container. 
 
@@ -21,18 +19,18 @@ See [features of CLion](https://www.jetbrains.com/clion/features/) and various d
 
 The problem with CLion is that it is not free. If you are at a university, you can obtain a free license for CLion and other JetBrains products (see [here](https://www.jetbrains.com/student/) - this is especially easy if you have a `.edu` e-mail address). We used to get free licenses at Fermilab, but JetBrains has stopped that practice, which is a huge shame. A lot of the time, however, JetBrains has "Early Access Program" (EAP) versions of CLion and those are free to run. They will, however, eventually expire. And though I run the EAP versions, sometimes new versions have shocking bugs or omissions that make me question their testing process. That said, they are very responsive to bug reports and new EAP versions come quickly that fix glaring problems. The production releases are quite robust and stable, but those require a license beyond a 30 day trial.  If there is enough interest in CLion from lab folks, we may be willing to contact JetBrains again and negotiate a lab license. If you have an affiliation with a university and have a `.edu` e-mail address, then you may use that to get an academic license as mentioned earlier. 
 
-## Linux CLion within the container and VNC
+# 2. Linux CLion within the container and VNC
 
 If you are willing to live with a non-Mac experience, you can pretty easily run CLion from within the container. If you are new to CLion and just want to try it out, this will be an easy way to get started, gain some experience, and then decide if you want to continue with the work of running the Mac CLion. Just keep in mind that the Linux experience will be somewhat disappointing if you are used to the Mac. 
 
 Follow the instructions in [README](README.md) and make a `devenv` image that includes `VNC`. Set up a development area and the `docker-compose.yml` file. Run the container as a service and connect to it with VNC.
 
-### Installing Linux CLion
+# 3. Installing Linux CLion
 Now, on your Mac, download the **Linux** CLion from [here](https://www.jetbrains.com/clion/download/other.html) and choose the version for Linux with bundled `JBR 8` as a `tar.gz` file. Alternatively, you can install the EAP version from [here](https://www.jetbrains.com/clion/nextversion/). It will default to the Mac `.dmg`, but you can override that by clicking on *DMG* and choosing "Linux with bundled JBR 8 (.tar.gz)". The `JBR 8` is the version of the Java runtime that CLion will use (the GUI is written in Java). The container does not have Java installed and the Java available from `yum` does not work with CLion. With the bundled version, CLion will come with the compatible Java runtime. Note that `JBR 8` is an older version of Java and some special features of the EAP will not work (such as Markdown Preview). I have a work around if you need this feature. Note that Mac CLion has no such issues. 
 
 Once the `tar.gz` file has downloaded, move it to a place accessible from the container (e.g. I use `/Users/lyon/Development/CLion`) and untar the file there. 
 
-### Preparing to run and configuring
+# 4. Preparing to run and configuring
 Now, go into the container with VNC. Open a terminal window. Set up your environment to the point where you can do a build. For example, source your experiment's setup script and then any other scripts to prepare for a build. For Muon g-2, this could be,
 
 ```bash
@@ -56,7 +54,7 @@ My screen looks like the following:
 
 Click on "Start using CLion".
 
-### Opening a project in Linux CLion
+# 5. Opening a project in Linux CLion
 
 If you have used Linux CLion previously, the most recent project will be opened. You can close it with `File -> Close Project` menu option. 
 
@@ -90,7 +88,7 @@ Once CMake completes, CLion will use poll the CMake setup to discover all of the
 
 Note that I typically do Debug builds when I'm developing and testing, and that's most of the time. Debug is the default configuration and so that just works. You can do a "Profile" build as well and you'll need to setup CLion for that. Go into the CMake settings. Unfortunately, "Profile" is not a standard CMake build configuration. Use the "Default" configuration and to the CMake options, add `-DCMAKE_BUILD_TYPE=Profile`. That should re-run CMake. You will then need to rebuild your code. Remove this option and change the build type back to "Debug" to go back to that build type.    
 
-### Building with Linux CLion
+# 6. Building with Linux CLion
 
 In the upper toolbar, you should see the Run/Build configuration box. See the figure with the button explanations. 
 
@@ -112,13 +110,13 @@ Optional - set up to run a FCL file:
 
 You may now build, run, and debug the program. 
 
-### Debugging
+# 7. Debugging
 
 Debugging should work as expected. One complication is that STL variables (vectors, strings, etc) will not print in a nice way. Turning on the pretty printers requires running a different (and much newer) version of python. The docker image has such a version, but it is difficult to set up and use. Ask me if you really want to try it. 
 
 Running CLion on the Mac and debugging *will* have the pretty printers.
 
-## Summary for Linux CLion
+# 8. Summary for Linux CLion
 
 Using CLion on Linux with VNC is quite convenient and is an easy way to get started with CLion without a lot of up front effort. As mentioned, it doesn't look nor act like a Mac application. If that's disappointing to you, then see [clion-mac.md](clion-mac.md) for running CLion on the Mac. 
 

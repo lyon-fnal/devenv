@@ -1,7 +1,7 @@
-# docker build -t lyonfnal/devenv_cvmfs:sl6 .
+# docker build -t lyonfnal/devenv_cvmfs:sl7 -f Dockerfile-sl7 .
 # To run, you need environment variable CVMFS_EXP to be set (e.g. gm2, nova, uboone)
 
-FROM lyonfnal/devenv:sl6
+FROM lyonfnal/devenv:sl7
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
 # Set the time correctly

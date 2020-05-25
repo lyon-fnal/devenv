@@ -1,4 +1,4 @@
-# docker build -t lyonfnal/devenv_cvmfs_nfsserver:sl6 .
+# docker build -t lyonfnal/devenv_cvmfs_nfsserver:sl6 -f Dockerfile-sl6 .
 
 FROM lyonfnal/devenv_cvmfs:sl6
 

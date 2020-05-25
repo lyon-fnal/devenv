@@ -17,6 +17,8 @@ mkdir -p /cvmfs/"${CVMFS_EXP}".opensciencegrid.org
 
 # We need to mount CVMFS
 echo "Mounting CVMFS for $CVMFS_EXP"
+
+getent group fuse || groupadd fuse && usermod -a -G fuse cvmfs  # Check for the fuse group (SL7 doesn't seem to add it)
 chgrp fuse /dev/fuse || (echo 'Did you docker run with --privileged?' && exit 1)
 mount -t cvmfs config-osg.opensciencegrid.org /cvmfs/config-osg.opensciencegrid.org
 mount -t cvmfs fermilab.opensciencegrid.org   /cvmfs/fermilab.opensciencegrid.org
