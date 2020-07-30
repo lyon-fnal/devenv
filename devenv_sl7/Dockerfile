@@ -4,7 +4,7 @@ FROM sl:7
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
 RUN yum update -y && \
-    yum install -y epel-release redhat-lsb-core perl expat-devel glibc-devel gdb time git curl-devel \
+    yum install -y epel-release redhat-lsb-core perl perl-Module-Pluggable expat-devel glibc-devel gdb time git curl-devel \
         emacs screen gcc meld valgrind ncurses-devel perf htop libunwind-devel libtool autoconf automake \
         openssl-devel tar zip xz bzip2 patch wget which sudo strace kernel-devel patch \
         freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel libXt-devel \
