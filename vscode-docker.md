@@ -7,7 +7,6 @@ Visual Studio Code (VSCode) has a very nice *Remote Development* feature for doc
 - [2. Setting up the container's VSCode instance](#2-setting-up-the-containers-vscode-instance)
   - [2.1. Use a newer version of git](#21-use-a-newer-version-of-git)
   - [2.2. Add extensions to your container VSCode](#22-add-extensions-to-your-container-vscode)
-  - [2.3. Install the beta version of CMake Tools](#23-install-the-beta-version-of-cmake-tools)
 - [3. Setting up the development environment](#3-setting-up-the-development-environment)
   - [3.1. Establish the development area](#31-establish-the-development-area)
   - [3.2. Set the cmake configuration](#32-set-the-cmake-configuration)
@@ -55,7 +54,7 @@ For some reason, extensions don't always use this `git` executable. You need to 
 }
 ```
 
-Note that there may be other entries in the file. 
+Note that there may be other entries in the file. You should restart the VSCode window after this making this change (bring up the command palette with Command-Shift-P and choose `Developer: Reload Window`).
 
 ## 2.2. Add extensions to your container VSCode
 
@@ -64,23 +63,12 @@ We need to add some extensions to the VSCode running in the container. Click on 
 * C/C++
 * C++ TestMate
 * CMake
-* CMake Tools (but see below)
+* CMake Tools
 * Git Graph
 * GitLens
 * Path Intellisense
 
 You may have to reload the window. You can do that after installing all of the extensions. 
-
-## 2.3. Install the beta version of CMake Tools
-
-As of writing this file, you need to use the beta version of CMake Tools. To do this, in the VSCode container window, pop a terminal (CTRL-\`). In your web browser on your Mac, go to https://github.com/microsoft/vscode-cmake-tools/releases and copy the link to the beta `cmake-tools.vsix` file (it may be under "Assets"). In the terminal window, run
-
-```bash
-wget https://github.com/microsoft/vscode-cmake-tools/releases/download/1.4.0-beta/cmake-tools.vsix
-# replace the URL above with what you copied
-```
-
-Now, in the same VSCode window, bring up the command palette with Command-Shift-P and type in `VSIX` in the search box. That should bring up `Extensions: Install from VSIX...`. Select the file you just downloaded. You may need to reload the VSCode window. 
 
 # 3. Setting up the development environment
 
@@ -200,7 +188,7 @@ With this you should be all set to do builds! You should only need to do the con
 
 # 4. Building your code
 
-You need to run `CMake Configure` first (this is equivalent to running `cmake ...` on the command line). Bring up the command palette (Command-Shift-P) and search for `CMake: Configure`. The first time you run, VSCode may ask you for the location of the `CMakeLists.txt` file. It will ask you to locate it. Do that. 
+You need to run `CMake Configure` first (this is equivalent to running `cmake ...` on the command line). Bring up the command palette (Command-Shift-P) and search for `CMake: Configure`. If it asks you to select a kit, select the `gm2-sl7-v9` kit that you made earlier. VSCode may also ask    you for the location of the `CMakeLists.txt` file. It will ask you to locate it. Do that. 
 
 If you get errors because it is running the wrong executable for CMake, disconnect from the container and reconnect. Then check the configuration and try again. 
 
