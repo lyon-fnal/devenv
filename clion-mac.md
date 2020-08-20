@@ -284,7 +284,7 @@ Now, follow the instructions again in [Capture your development environment to a
 
 Some random notes on how this system works and why some choices were made so I don't forget.
 
-The goal here is to allow **performant** and, at a slightly less priority, convenient use of CLion on the Mac for Linux development. Performance is the key. CLion has a remote development mode, but is uses `ssh` and it seems to call it many, many times to get into the remote side for many tasks. CLion also wants to copy files between the remote and local sides. The fact that our development environment requires substantial initialization means that each `ssh` call incurs substantial overhead along with file movement. Performance suffers to the point that the system is unusable. 
+The goal here is to allow **performant** and, at a slightly less priority, convenient use of CLion on the Mac for Linux development. Performance is the key. CLion has a remote development mode, but it uses `ssh` and it seems to call it many, many times to get into the remote side for many tasks. CLion also wants to copy files between the remote and local sides. The fact that our development environment requires substantial initialization means that each `ssh` call incurs substantial overhead along with file movement. Performance suffers to the point that the system is unusable. 
 
 To mitigate these problems, the system here,
 * Uses docker for very performant linux access
