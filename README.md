@@ -23,6 +23,8 @@ Adam L. Lyon (April 2020)
 - [10. Doing stuff](#10-doing-stuff)
   - [10.1. Examining container resource usage with `netdata`](#101-examining-container-resource-usage-with-netdata)
   - [10.2. Running CLion](#102-running-clion)
+  - [10.3. Running VSCode](#103-running-vscode)
+  - [10.4 Running sshfs](#104-running-sshfs)
     
 # 1. Introduction
 Linux style development, like what we do for particle physics experiments at Fermilab, is becoming more difficult on the Mac. Apple is moving to its own style of development that is often incompatible. For example,
@@ -164,7 +166,7 @@ Note that only `devenv:sl7` and `devenv_cvmfs:sl7` are defined for Scientific Li
 
 ## 7.1. I still don't know which image to use
 
-Use `devenv_cvmfs:sl6` for a long lived container that mounts CVMFS itself. 
+Use `devenv_cvmfs:sl6` (or `devenv_cvmfs:sl7`) for a long lived container that mounts CVMFS itself. 
 
 # 8. Running the containers with `docker-compose`
 
@@ -315,5 +317,17 @@ The `netdata` server program is included in the image. You can run it in a long 
 
 See [clion-linux.md](clion-linux.md) for running CLion under Linux within the container. See [clion-mac.md](clion-mac.md) for running CLion under the Mac using a `devenv` container.  
 
- 
- 
+## 10.3. Running VSCode
+
+See [vscode-docker.md](vscode-docker.md) for running VSCode on your host computer and connecting to a SL7 container.
+
+## 10.4 Running sshfs
+
+You may need access to data on a Fermilab computer, say in `/pnfs`. If you can log into a Fermilab `GPVM` node, then you can mount any directory on that node into your container with `sshfs` with these commands using `/pnfs` for an example.
+
+```bash
+mkdir /pnfs
+kinit you@FNAL.GOV  # Get a kerberos ticket with your username
+sshfs you@gm2gpvm04.fnal.gov:/pnfs /pnfs   # Replace you and the machine with the one you use
+ls /pnfs
+```

@@ -10,7 +10,7 @@ RUN rm -rf /etc/localtime
 RUN ln -s /usr/share/zoneinfo/America/Chicago /etc/localtime
 
 # Install cvmfs and configure
-RUN yum install -y osg-oasis
+RUN yum install -y osg-oasis sshfs
 RUN /bin/echo CVMFS_REPOSITORIES="`echo $((ls /cvmfs)|sort -u)|tr ' ' ,`" > /etc/cvmfs/default.local
 RUN /bin/echo CVMFS_QUOTA_LIMIT=20000 >> /etc/cvmfs/default.local
 RUN /bin/echo CVMFS_HTTP_PROXY=DIRECT >> /etc/cvmfs/default.local
