@@ -225,7 +225,7 @@ cd try
 
 ## 5.2 Create an environment variable file
 
-The debugger will run in a fresh shell and, unfortunately, it will not run your environment variable file first. You can specify an environment variable file that the debugger script will load. To create this file, do
+The debugger will run in a fresh shell and, unfortunately, it will not run your environment setup script. Instead, you can specify an environment variable file that the debugger script will load. To create this file, do
 
 ```bash
 env > project.env
