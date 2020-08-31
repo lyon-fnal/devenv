@@ -323,11 +323,11 @@ See [vscode-docker.md](vscode-docker.md) for running VSCode on your host compute
 
 ## 10.4 Running sshfs
 
-You may need access to data on a Fermilab computer, say in `/pnfs`. If you can log into a Fermilab `GPVM` node, then you can mount any directory on that node into your container with `sshfs` with these commands using `/pnfs` for an example.
+You may need access to data on a Fermilab computer, say in `/pnfs`. If you can log into a Fermilab `GPVM` node, then you can mount any directory on that node into your container with `sshfs` with these commands using `/pnfs` for an example. Note the `reconnect` option, which means that the client will ping the server every 5 seconds and will reconnect after two failures (10 seconds). 
 
 ```bash
 mkdir /pnfs
 kinit you@FNAL.GOV  # Get a kerberos ticket with your username
-sshfs you@gm2gpvm04.fnal.gov:/pnfs /pnfs   # Replace you and the machine with the one you use
+sshfs sshfs -o reconnect,ServerAliveInterval=5,ServerAliveCountMax=2 you@gm2gpvm04.fnal.gov:/pnfs /pnfs   # Replace you and the machine with the one you use
 ls /pnfs
 ```
