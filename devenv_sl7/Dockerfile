@@ -1,7 +1,7 @@
 # docker build -t lyonfnal/devenv:sl7 .
 
 FROM sl:7
-MAINTAINER Adam Lyon <lyon@fnal.gov>
+LABEL maintainer="Adam Lyon <lyon@fnal.gov>"
 
 RUN yum update -y && \
     yum install -y epel-release redhat-lsb-core perl perl-Module-Pluggable expat-devel glibc-devel gdb time git curl-devel \
@@ -15,7 +15,7 @@ RUN yum update -y && \
 
 # Get rh-python36 for CLion debugging
 RUN yum install -y "http://ftp.scientificlinux.org/linux/scientific/7/external_products/softwarecollections/yum-conf-softwarecollections-2.0-1.el7.noarch.rpm" && \
-    yum install -y rh-python36 && \
+    yum install -y rh-python36 llvm-toolset-7.0-clang llvm-toolset-7.0-clang-tools-extra && \
     yum clean all
 
 # # Got the right repo from http://ftp.scientificlinux.org/linux/fermi/slf7/docs/
