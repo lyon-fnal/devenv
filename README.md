@@ -299,3 +299,9 @@ kinit you@FNAL.GOV  # Get a kerberos ticket with your username
 sshfs -o reconnect,ServerAliveInterval=5,ServerAliveCountMax=2 you@gm2gpvm04.fnal.gov:/pnfs /pnfs   # Replace you and the machine with the one you use
 ls /pnfs
 ```
+
+When you no longer need the volume, you should unmount it...
+
+```bash
+umount /pnfs
+```
