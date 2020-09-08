@@ -9,6 +9,7 @@ RUN yum update -y && \
         openssl-devel tar zip xz bzip2 patch wget which sudo strace kernel-devel patch \
         freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel libXt-devel \
         zlib-devel libuuid-devel libmnl-devel make \
+         pcre2 xxhash-libs libzstd libzstd-devel \
         autoconf-archive autogen pkgconfig curl lsof && \
     yum clean all
 
