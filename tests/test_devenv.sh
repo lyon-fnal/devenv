@@ -6,7 +6,7 @@ setup_suite() {
   # Setup the test suite. This will create some volumes, etc. This may take awhile
 
   # Make the docker-compose.yaml file
-  sed -e 's/<USER>/lyon/g' -e 's/<EXP>/gm2/g' -e 's/<NAME>/UT/g' ../compose/docker-compose.yml-TEMPLATE > docker-compose.yml
+  sed -e 's/<USER>/lyon/g' -e 's/<EXP>/gm2.opensciencegrid.org/g' -e 's/<NAME>/UT/g' ../compose/docker-compose.yml-TEMPLATE > docker-compose.yml
 
   # Make the external volumes
   echo 'Creating volumes'
