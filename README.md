@@ -296,6 +296,6 @@ You may need access to data on a Fermilab computer, say in `/pnfs`. If you can l
 ```bash
 mkdir /pnfs
 kinit you@FNAL.GOV  # Get a kerberos ticket with your username
-sshfs sshfs -o reconnect,ServerAliveInterval=5,ServerAliveCountMax=2 you@gm2gpvm04.fnal.gov:/pnfs /pnfs   # Replace you and the machine with the one you use
+sshfs -o reconnect,ServerAliveInterval=5,ServerAliveCountMax=2 you@gm2gpvm04.fnal.gov:/pnfs /pnfs   # Replace you and the machine with the one you use
 ls /pnfs
 ```
