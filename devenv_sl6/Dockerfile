@@ -1,7 +1,7 @@
 # docker build -t lyonfnal/devenv:sl6 .
 
 FROM sl:6
-MAINTAINER Adam Lyon <lyon@fnal.gov>
+LABEL MAINTAINER="Adam Lyon <lyon@fnal.gov>"
 
 RUN yum update -y && \
     yum install -y epel-release redhat-lsb-core perl expat-devel glibc-devel gdb time git curl-devel \

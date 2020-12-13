@@ -1,5 +1,5 @@
 # docker build -t lyonfnal/devenv_cvmfs:sl7 -f Dockerfile-sl7 .
-# To run, you need environment variable CVMFS_EXP to be set (e.g. gm2, nova, uboone)
+# To run, you need environment variable CVMFS_EXP to be set (e.g. gm2.opensciencegrid.gov -- separate multiple with :)
 
 FROM lyonfnal/devenv:sl7
 MAINTAINER Adam Lyon <lyon@fnal.gov>

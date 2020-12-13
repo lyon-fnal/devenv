@@ -5,11 +5,12 @@ LABEL maintainer="Adam Lyon <lyon@fnal.gov>"
 
 RUN yum update -y && \
     yum install -y epel-release redhat-lsb-core perl perl-Module-Pluggable expat-devel glibc-devel gdb time git curl-devel \
-        emacs screen gcc meld valgrind ncurses-devel perf htop libunwind-devel libtool autoconf automake \
-        openssl-devel tar zip xz bzip2 patch wget which sudo strace kernel-devel patch \
-        freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel libXt-devel \
-        zlib-devel libuuid-devel libmnl-devel make \
-        pcre2 xxhash-libs libzstd libzstd-devel \
+        emacs screen gcc meld valgrind ncurses-devel perf htop libunwind-devel libtool autoconf automake && \
+     yum install -y openssl-devel tar zip xz bzip2 patch wget which sudo strace kernel-devel patch \
+        freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel libXt-devel && \
+    yum install -y zlib-devel libuuid-devel libmnl-devel make \
+        pcre2 xxhash-libs libzstd libzstd-devel mesa-dri-drivers && \
+    yum install -y ftgl libGLEW gl2ps root-graf-asimage \
         autoconf-archive autogen pkgconfig curl lsof && \
     yum clean all
 
